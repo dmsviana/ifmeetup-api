@@ -1,0 +1,36 @@
+spring:
+  profiles:
+    active: dev
+  
+  # Configurações do Spring Boot Scheduler
+  task:
+    scheduling:
+      thread-name-prefix: "ifmeetup-scheduler-"
+      pool:
+        size: 3
+    execution:
+      pool:
+        core-size: 5
+        max-size: 10
+        queue-capacity: 25
+        keep-alive: "60s"
+
+# Configurações customizadas para tarefas agendadas
+ifmeetup:
+  scheduler:
+    # Habilitar/desabilitar tarefas agendadas
+    enabled: true
+    # Configurações específicas das tarefas
+    tasks:
+      # Marcar eventos como concluídos
+      mark-expired-events:
+        enabled: true
+        cron: "0 */30 * * * *"  # A cada 30 minutos
+      # Marcar eventos como em progresso  
+      mark-in-progress-events:
+        enabled: true
+        cron: "0 0 2 * * *"     # Todos os dias às 02:00
+      # Tarefas de manutenção semanal
+      weekly-maintenance:
+        enabled: true
+        cron: "0 0 3 * * SUN"   # Domingos às 03:00

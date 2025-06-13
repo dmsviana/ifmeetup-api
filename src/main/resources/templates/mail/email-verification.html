@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Verificação de Email - IFMeetup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #007b33;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007b33;
+            color: #FFFFFF !important;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 2px solid #005a24;
+        }
+        .button:hover {
+            background-color: #005a24;
+        }
+        .token {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+        .info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Verificação de Email</h1>
+    </div>
+    
+    <div class="content">
+        <p>Olá <span th:text="${name}">Usuário</span>,</p>
+        
+        <p>Para completar seu cadastro no IFMeetup, precisamos verificar seu endereço de email.</p>
+        
+        <p>Por favor, clique no botão abaixo para verificar seu email:</p>
+        
+        <div style="text-align: center;">
+            <a th:href="${verificationLink}" class="button">Verificar Email</a>
+        </div>
+        
+        <p>Ou use o seguinte código de verificação:</p>
+        
+        <div class="token">
+            <span th:text="${token}">TOKEN</span>
+        </div>
+        
+        <div class="info">
+            <p><strong>Observação:</strong></p>
+            <ul>
+                <li>Este link é válido por 24 horas</li>
+                <li>Após a verificação, você terá acesso completo à plataforma</li>
+                <li>Se você não se cadastrou no IFMeetup, por favor ignore este email</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Este é um email automático, por favor não responda.</p>
+        <p>&copy; 2024 IFMeetup. Todos os direitos reservados.</p>
+    </div>
+</body>
+</html> 
