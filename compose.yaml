@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    container_name: ifmeetup-postgres
+    environment:
+      - 'POSTGRES_DB=ifmeetup'
+      - 'POSTGRES_PASSWORD=ifmeetup123'
+      - 'POSTGRES_USER=ifmeetup'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ifmeetup" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ifmeetup-network
+
+volumes:
+  postgres_data:
+    name: ifmeetup-postgres-data
+
+networks:
+  ifmeetup-network:
+    name: ifmeetup-network
