@@ -1,0 +1,91 @@
+package br.edu.ifpb.ifmeetup.controller;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.edu.ifpb.ifmeetup.controller.contract.AuthApiContract;
+import br.edu.ifpb.ifmeetup.dto.auth.request.ForgotPasswordRequest;
+import br.edu.ifpb.ifmeetup.dto.auth.request.LoginRequest;
+import br.edu.ifpb.ifmeetup.dto.auth.request.PasswordResetRequest;
+import br.edu.ifpb.ifmeetup.dto.auth.request.RegisterRequest;
+import br.edu.ifpb.ifmeetup.dto.auth.response.AuthResponse;
+import br.edu.ifpb.ifmeetup.exception.BusinessValidationException;
+import br.edu.ifpb.ifmeetup.exception.EmailNotVerifiedException;
+import br.edu.ifpb.ifmeetup.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController implements AuthApiContract {
+
+    private final AuthService authService;
+    
+    @Value("${application.url:http://localhost:8080}")
+    private String applicationUrl;
+
+    @Override
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response) {
+        try {
+            return ResponseEntity.ok(authService.login(request, response));
+        } catch (EmailNotVerifiedException e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(AuthResponse.error(e.getMessage()));
+        }
+    }
+
+    @Override
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+    }
+
+    @Override
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponse> logout() {
+        return ResponseEntity.ok(authService.logout());
+    }
+
+    @Override
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.forgotPassword(request));
+    }
+
+    @Override
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request));
+    }
+
+    @Override
+    @GetMapping("/verify")
+    public ResponseEntity<AuthResponse> verifyAccount(@RequestParam("token") String token) {
+        try {
+            AuthResponse response = authService.verifyAccount(token);
+            // API cliente espera uma resposta, não uma redireção
+            return ResponseEntity.ok(response);
+        } catch (BusinessValidationException e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(AuthResponse.error(e.getMessage()));
+        }
+    }
+
+    @Override
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> me() {
+        return ResponseEntity.ok(authService.me());
+    }
+} 
