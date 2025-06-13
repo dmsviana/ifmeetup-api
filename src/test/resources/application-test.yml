@@ -1,0 +1,30 @@
+spring:
+  # Configurações do Banco de Dados para Testes (H2 em memória)
+  datasource:
+    url: jdbc:h2:mem:ifmeetuptestdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop # Cria o schema ao iniciar e apaga ao finalizar os testes
+    show-sql: true # Mostra o SQL gerado no console (útil para debug)
+    properties:
+      hibernate:
+        format_sql: true
+  # Configuração para o H2 Console (opcional, mas útil para inspecionar o banco durante os testes)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console # Acessível em http://localhost:<porta_teste>/h2-console
+      settings:
+        trace: false
+        web-allow-others: false
+
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE # Para ver os parâmetros das queries
+    # br.edu.ifpb.ifmeetup: DEBUG # Ajuste conforme necessidade
