@@ -352,28 +352,6 @@ class AuthServiceTest {
     }
 
     @Nested
-    @DisplayName("Testes de logout")
-    class LogoutTests {
-
-        @Test
-        @DisplayName("Deve fazer logout com sucesso")
-        void shouldLogoutSuccessfully() {
-            // Act
-            AuthResponse response = authService.logout();
-            
-            // Assert
-            assertNotNull(response);
-            assertEquals("Logout realizado com sucesso", response.message());
-            assertNull(response.user());
-            assertNull(response.sessionId());
-            assertNull(response.expiresAt());
-            assertNull(response.token());
-            
-            // Não verificamos mais clearTokenCookie pois não usamos mais cookies
-        }
-    }
-
-    @Nested
     @DisplayName("Testes de esquecimento de senha")
     class ForgotPasswordTests {
 

@@ -15,9 +15,12 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.WebUtils;
 
+import br.edu.ifpb.ifmeetup.domain.entity.TokenBlacklist;
 import br.edu.ifpb.ifmeetup.domain.entity.User;
+import br.edu.ifpb.ifmeetup.domain.repository.auth.TokenBlacklistRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -25,10 +28,12 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtTokenProvider {
 
     private static final String JWT_COOKIE_NAME = "jwt";
@@ -38,16 +43,19 @@ public class JwtTokenProvider {
     private final long tokenValidityInMilliseconds;
     private final boolean secure;
     private final String domain;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     public JwtTokenProvider(
             @Value("${spring.security.jwt.secret}") String secret,
             @Value("${jwt.expiration:86400000}") long tokenValidityInMilliseconds,
             @Value("${jwt.cookie.secure:false}") boolean secure,
-            @Value("${jwt.cookie.domain:localhost}") String domain) {
+            @Value("${jwt.cookie.domain:localhost}") String domain,
+            TokenBlacklistRepository tokenBlacklistRepository) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
         this.secure = secure;
         this.domain = domain;
+        this.tokenBlacklistRepository = tokenBlacklistRepository;
     }
 
     public String createToken(User user) {
@@ -108,7 +116,14 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String token) {
+
         try {
+           
+            if (isTokenBlacklisted(token)) {
+                log.debug("Token está na blacklist");
+                return false;
+            }
+            
             Jwts.parser()
                     .verifyWith(key)
                     .build()
@@ -146,5 +161,57 @@ public class JwtTokenProvider {
         return Instant.ofEpochMilli(expirationDate.getTime())
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    
+    @Transactional
+    public void invalidateToken(String token) {
+        try {
+            String email = getEmailFromToken(token);
+            UUID sessionId = getSessionIdFromToken(token);
+            LocalDateTime expiryDate = getExpirationDateFromToken(token);
+
+            TokenBlacklist blacklistedToken = new TokenBlacklist();
+
+            blacklistedToken.setToken(token);
+            blacklistedToken.setExpiryDate(expiryDate);
+            blacklistedToken.setUserEmail(email);
+            blacklistedToken.setSessionId(sessionId.toString());
+
+
+            tokenBlacklistRepository.save(blacklistedToken);
+            log.debug("Token adicionado à blacklist para usuário: {} (sessão: {})", email, sessionId);
+        } catch (Exception e) {
+            log.error("Erro ao invalidar token: {}", e.getMessage());
+        }
+    }
+
+   
+    @Transactional(readOnly = true)
+    public boolean isTokenBlacklisted(String token) {
+        return tokenBlacklistRepository.existsByToken(token);
+    }
+
+   
+    @Transactional
+    public void invalidateAllUserTokens(String userEmail) {
+        tokenBlacklistRepository.deleteByUserEmail(userEmail);
+        log.debug("Todos os tokens invalidados para usuário: {}", userEmail);
+    }
+
+    
+    @Transactional
+    public void cleanExpiredTokens() {
+        tokenBlacklistRepository.deleteExpiredTokens(LocalDateTime.now());
+        log.debug("Tokens expirados removidos da blacklist");
+    }
+
+    
+    public String extractTokenFromHeader(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return null;
     }
 } 

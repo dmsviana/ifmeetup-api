@@ -19,6 +19,7 @@ import br.edu.ifpb.ifmeetup.dto.auth.response.AuthResponse;
 import br.edu.ifpb.ifmeetup.exception.BusinessValidationException;
 import br.edu.ifpb.ifmeetup.exception.EmailNotVerifiedException;
 import br.edu.ifpb.ifmeetup.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -54,8 +55,8 @@ public class AuthController implements AuthApiContract {
 
     @Override
     @PostMapping("/logout")
-    public ResponseEntity<AuthResponse> logout() {
-        return ResponseEntity.ok(authService.logout());
+    public ResponseEntity<AuthResponse> logout(HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.ok(authService.logout(request, response));
     }
 
     @Override
@@ -75,7 +76,7 @@ public class AuthController implements AuthApiContract {
     public ResponseEntity<AuthResponse> verifyAccount(@RequestParam("token") String token) {
         try {
             AuthResponse response = authService.verifyAccount(token);
-            // API cliente espera uma resposta, não uma redireção
+            
             return ResponseEntity.ok(response);
         } catch (BusinessValidationException e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)

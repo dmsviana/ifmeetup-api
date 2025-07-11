@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -38,12 +39,12 @@ public interface AuthApiContract {
     })
     ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request);
 
-    @Operation(summary = "Logout", description = "Realiza o logout do usuário atualmente autenticado")
+    @Operation(summary = "Logout", description = "Realiza o logout do usuário atualmente autenticado e invalida o token JWT")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso",
                     content = @Content(schema = @Schema(implementation = AuthResponse.class)))
     })
-    ResponseEntity<AuthResponse> logout();
+    ResponseEntity<AuthResponse> logout(HttpServletRequest request, HttpServletResponse response);
 
     @Operation(summary = "Recuperação de senha", description = "Envia um email com instruções para recuperação de senha")
     @ApiResponses(value = {

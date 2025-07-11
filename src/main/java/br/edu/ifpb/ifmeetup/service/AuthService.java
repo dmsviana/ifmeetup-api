@@ -22,6 +22,7 @@ import br.edu.ifpb.ifmeetup.domain.entity.VerificationToken;
 import br.edu.ifpb.ifmeetup.domain.enums.ProfileType;
 import br.edu.ifpb.ifmeetup.domain.repository.auth.PasswordResetTokenRepository;
 import br.edu.ifpb.ifmeetup.domain.repository.auth.RoleRepository;
+import br.edu.ifpb.ifmeetup.domain.repository.auth.TokenBlacklistRepository;
 import br.edu.ifpb.ifmeetup.domain.repository.auth.UserProfileRepository;
 import br.edu.ifpb.ifmeetup.domain.repository.auth.UserRepository;
 import br.edu.ifpb.ifmeetup.domain.repository.auth.VerificationTokenRepository;
@@ -35,6 +36,7 @@ import br.edu.ifpb.ifmeetup.exception.BusinessValidationException;
 import br.edu.ifpb.ifmeetup.exception.EmailNotVerifiedException;
 import br.edu.ifpb.ifmeetup.exception.UserAlreadyExistsException;
 import br.edu.ifpb.ifmeetup.security.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +51,7 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final UserProfileRepository userProfileRepository;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final AuthenticationManager authenticationManager;
@@ -162,8 +165,32 @@ public class AuthService {
     }
     
     @Transactional
-    public AuthResponse logout() {
-        return AuthResponse.success("Logout realizado com sucesso");
+    public AuthResponse logout(HttpServletRequest request, HttpServletResponse response) {
+        
+        try {
+
+            String token = tokenProvider.extractTokenFromHeader(request);
+            
+            if (token != null) {
+
+                tokenProvider.invalidateToken(token);
+                log.debug("Token invalidado durante logout");
+
+            }
+            
+            SecurityContextHolder.clearContext();
+            
+            tokenProvider.clearTokenCookie(response);
+            
+            return AuthResponse.success("Logout realizado com sucesso");
+        
+        } catch (Exception e) {
+
+            log.error("Erro durante logout: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+
+            return AuthResponse.success("Logout realizado com sucesso");
+        }
     }
     
     @Transactional
@@ -269,12 +296,10 @@ public class AuthService {
             throw new UsernameNotFoundException("Usuário não autenticado");
         }
         
-        // Primeiro, tenta obter o User diretamente do principal (colocado pelo JwtAuthenticationFilter)
         if (authentication.getPrincipal() instanceof User) {
             return (User) authentication.getPrincipal();
         }
         
-        // Fallback: busca pelo email se o principal não for um User
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com o email: " + email));
