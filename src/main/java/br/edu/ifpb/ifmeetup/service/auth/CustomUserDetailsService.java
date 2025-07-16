@@ -1,4 +1,4 @@
-package br.edu.ifpb.ifmeetup.service;
+package br.edu.ifpb.ifmeetup.service.auth;
 
 import br.edu.ifpb.ifmeetup.domain.entity.User;
 import br.edu.ifpb.ifmeetup.domain.repository.auth.UserRepository;

@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class JwtTokenProvider {
 
     private static final String JWT_COOKIE_NAME = "jwt";

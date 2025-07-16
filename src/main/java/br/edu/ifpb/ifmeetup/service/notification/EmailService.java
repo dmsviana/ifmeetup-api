@@ -1,4 +1,4 @@
-package br.edu.ifpb.ifmeetup.service;
+package br.edu.ifpb.ifmeetup.service.notification;
 
 import br.edu.ifpb.ifmeetup.config.ApplicationConfig;
 import br.edu.ifpb.ifmeetup.exception.EmailSendException;

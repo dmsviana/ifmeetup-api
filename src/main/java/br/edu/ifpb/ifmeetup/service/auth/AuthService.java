@@ -1,4 +1,4 @@
-package br.edu.ifpb.ifmeetup.service;
+package br.edu.ifpb.ifmeetup.service.auth;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -32,14 +32,19 @@ import br.edu.ifpb.ifmeetup.dto.auth.request.PasswordResetRequest;
 import br.edu.ifpb.ifmeetup.dto.auth.request.RegisterRequest;
 import br.edu.ifpb.ifmeetup.dto.auth.response.AuthResponse;
 import br.edu.ifpb.ifmeetup.dto.user.response.UserResponse;
+import br.edu.ifpb.ifmeetup.exception.AuthenticationException;
 import br.edu.ifpb.ifmeetup.exception.BusinessValidationException;
 import br.edu.ifpb.ifmeetup.exception.EmailNotVerifiedException;
 import br.edu.ifpb.ifmeetup.exception.UserAlreadyExistsException;
+import br.edu.ifpb.ifmeetup.exception.ValidationException;
 import br.edu.ifpb.ifmeetup.security.JwtTokenProvider;
+import br.edu.ifpb.ifmeetup.domain.event.UserRegisteredEvent;
+import br.edu.ifpb.ifmeetup.service.notification.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Slf4j
 @Service
@@ -56,22 +61,30 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
     
     @Transactional
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
+        log.debug("Login attempt for email: {}", request.email());
+        
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
         
         if (!authentication.isAuthenticated()) {
-            throw new BusinessValidationException("Credenciais inválidas");
+            log.warn("Failed authentication attempt for email: {}", request.email());
+            throw AuthenticationException.invalidCredentials();
         }
         
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessValidationException("Usuário não encontrado"));
+                .orElseThrow(() -> {
+                    log.warn("User not found for email: {}", request.email());
+                    return AuthenticationException.invalidCredentials();
+                });
         
         if (!user.isEmailVerified()) {
-            throw new EmailNotVerifiedException("Email não verificado. Por favor, verifique seu email antes de fazer login.");
+            log.info("Login attempt with unverified email: {}", request.email());
+            throw AuthenticationException.emailNotVerified(user.getEmail());
         }
         
         user.setLastLogin(LocalDateTime.now());
@@ -80,6 +93,8 @@ public class AuthService {
         String token = tokenProvider.createToken(user);
         UUID sessionId = tokenProvider.getSessionIdFromToken(token);
         LocalDateTime expiresAt = tokenProvider.getExpirationDateFromToken(token);
+        
+        log.info("Successful login for user: {} - Session ID: {}", user.getEmail(), sessionId);
         
         return AuthResponse.success(
                 "Login realizado com sucesso",
@@ -92,14 +107,17 @@ public class AuthService {
     
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        log.debug("Registration attempt for email: {} with profile: {}", request.email(), request.profileType());
         
         if (userRepository.existsByEmail(request.email())) {
+            log.warn("Registration attempt for already existing email: {}", request.email());
             throw new UserAlreadyExistsException("Email já cadastrado");
         }
         
         ProfileType profileType = request.profileType();
         if (profileType == ProfileType.ADMIN || profileType == ProfileType.COORDINATOR) {
-            throw new BusinessValidationException("Tipo de perfil não permitido para registro público");
+            throw ValidationException.forField("profileType", profileType, 
+                "Tipo de perfil não permitido para registro público");
         }
         
         Role defaultRole = getDefaultRoleForProfileType(request);
@@ -128,16 +146,12 @@ public class AuthService {
         verificationToken.setExpiryDate(LocalDateTime.now().plusDays(1));
         verificationTokenRepository.save(verificationToken);
 
-        emailService.sendEmailVerification(
-            savedUser.getEmail(),
-            savedUser.getFirstName(),
-            verificationToken.getToken()
-        );
+        // Publicar evento para envio de emails após commit da transação
+        // Isso garante que emails só sejam enviados se o registro for bem-sucedido
+        UserRegisteredEvent event = UserRegisteredEvent.of(this, savedUser, verificationToken.getToken());
+        eventPublisher.publishEvent(event);
 
-        emailService.sendWelcomeEmail(
-            savedUser.getEmail(),
-            savedUser.getFirstName()
-        );
+        log.info("User registered successfully: {} - Event published for email processing", savedUser.getEmail());
         
         return AuthResponse.success(
             "Usuário registrado com sucesso. Verifique seu email para ativar sua conta.",
@@ -161,7 +175,8 @@ public class AuthService {
         }
         
         return roleRepository.findByName(roleName)
-                .orElseThrow(() -> new BusinessValidationException("Perfil não encontrado: " + roleName));
+                .orElseThrow(() -> new ValidationException("Perfil não encontrado: " + roleName)
+                    .addDetail("roleName", roleName));
     }
     
     @Transactional
@@ -196,7 +211,7 @@ public class AuthService {
     @Transactional
     public AuthResponse forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessValidationException("Usuário não encontrado"));
+                .orElseThrow(() -> ValidationException.forField("email", request.email(), "Usuário não encontrado"));
         
         passwordResetTokenRepository.deleteByUserId(user.getId());
         
@@ -218,14 +233,14 @@ public class AuthService {
     @Transactional
     public AuthResponse resetPassword(PasswordResetRequest request) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.token())
-                .orElseThrow(() -> new BusinessValidationException("Token inválido"));
+                .orElseThrow(() -> AuthenticationException.invalidToken("password-reset"));
         
         if (resetToken.isUsed()) {
-            throw new BusinessValidationException("Token já utilizado");
+            throw AuthenticationException.tokenAlreadyUsed("password-reset");
         }
         
         if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new BusinessValidationException("Token expirado");
+            throw AuthenticationException.expiredToken("password-reset");
         }
         
         User user = resetToken.getUser();
@@ -242,7 +257,7 @@ public class AuthService {
     public AuthResponse verifyToken(String token) {
         return getVerificationToken(token)
                 .map(vt -> AuthResponse.success("Token válido"))
-                .orElseThrow(() -> new BusinessValidationException("Token inválido ou expirado"));
+                .orElseThrow(() -> AuthenticationException.invalidToken("verification"));
     }
     
     @Transactional
@@ -251,14 +266,14 @@ public class AuthService {
         String trimmedToken = token.trim();
         
         VerificationToken verificationToken = verificationTokenRepository.findByToken(trimmedToken)
-                .orElseThrow(() -> new BusinessValidationException("Token inválido ou expirado"));
+                .orElseThrow(() -> AuthenticationException.invalidToken("verification"));
         
         if (verificationToken.isUsed()) {
-            throw new BusinessValidationException("Token já utilizado");
+            throw AuthenticationException.tokenAlreadyUsed("verification");
         }
         
         if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new BusinessValidationException("Token inválido ou expirado");
+            throw AuthenticationException.expiredToken("verification");
         }
         
         User user = verificationToken.getUser();

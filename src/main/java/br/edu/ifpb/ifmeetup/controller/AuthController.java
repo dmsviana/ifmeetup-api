@@ -16,9 +16,9 @@ import br.edu.ifpb.ifmeetup.dto.auth.request.LoginRequest;
 import br.edu.ifpb.ifmeetup.dto.auth.request.PasswordResetRequest;
 import br.edu.ifpb.ifmeetup.dto.auth.request.RegisterRequest;
 import br.edu.ifpb.ifmeetup.dto.auth.response.AuthResponse;
-import br.edu.ifpb.ifmeetup.exception.BusinessValidationException;
+
 import br.edu.ifpb.ifmeetup.exception.EmailNotVerifiedException;
-import br.edu.ifpb.ifmeetup.service.AuthService;
+import br.edu.ifpb.ifmeetup.service.auth.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -74,14 +74,8 @@ public class AuthController implements AuthApiContract {
     @Override
     @GetMapping("/verify")
     public ResponseEntity<AuthResponse> verifyAccount(@RequestParam("token") String token) {
-        try {
-            AuthResponse response = authService.verifyAccount(token);
-            
-            return ResponseEntity.ok(response);
-        } catch (BusinessValidationException e) {
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body(AuthResponse.error(e.getMessage()));
-        }
+        AuthResponse response = authService.verifyAccount(token);
+        return ResponseEntity.ok(response);
     }
 
     @Override

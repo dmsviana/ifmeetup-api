@@ -10,7 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import br.edu.ifpb.ifmeetup.domain.entity.base.BaseEntity;
 import br.edu.ifpb.ifmeetup.domain.enums.RoomStatus;
 import br.edu.ifpb.ifmeetup.domain.enums.RoomType;
-import br.edu.ifpb.ifmeetup.exception.BusinessValidationException;
+import br.edu.ifpb.ifmeetup.exception.ValidationException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -85,7 +85,7 @@ public class Room extends BaseEntity {
 
     public void addResource(RoomResource resource) {
         if (resource == null) {
-            throw new BusinessValidationException("Recurso não pode ser nulo");
+            throw new ValidationException("Recurso não pode ser nulo");
         }
         
         this.inventory.add(resource);

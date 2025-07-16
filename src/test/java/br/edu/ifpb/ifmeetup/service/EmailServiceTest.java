@@ -2,6 +2,7 @@ package br.edu.ifpb.ifmeetup.service;
 
 import br.edu.ifpb.ifmeetup.config.ApplicationConfig;
 import br.edu.ifpb.ifmeetup.exception.EmailSendException;
+import br.edu.ifpb.ifmeetup.service.notification.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;

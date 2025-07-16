@@ -14,6 +14,7 @@ import br.edu.ifpb.ifmeetup.domain.enums.ResourceType;
 import br.edu.ifpb.ifmeetup.domain.enums.RoomStatus;
 import br.edu.ifpb.ifmeetup.domain.enums.RoomType;
 import br.edu.ifpb.ifmeetup.domain.projection.RoomProjection;
+import br.edu.ifpb.ifmeetup.domain.projection.RoomWithResourcesProjection;
 
 public interface RoomRepository extends JpaRepository<Room, UUID> {
 
@@ -53,6 +54,22 @@ public interface RoomRepository extends JpaRepository<Room, UUID> {
     // Isso será útil para o RoomService
     @Query("SELECT r FROM Room r JOIN r.inventory inv WHERE inv.resourceType = :resourceType AND inv.quantity >= :minQuantity AND r.status = br.edu.ifpb.ifmeetup.domain.enums.RoomStatus.AVAILABLE")
     List<Room> findByResourceAndQuantity(
+            @Param("resourceType") ResourceType resourceType,
+            @Param("minQuantity") Integer minQuantity);
+
+    // Projection-based queries for enhanced functionality
+    @Query("SELECT r FROM Room r WHERE r.status = :status AND r.id NOT IN " +
+            "(SELECT e.room.id FROM Event e WHERE " +
+            "((e.startDateTime < :endDateTime AND e.endDateTime > :startDateTime) AND e.status NOT IN ('REJECTED', 'CANCELED'))"
+            +
+            ")")
+    List<RoomProjection> findProjectedAvailableRooms(
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime,
+            @Param("status") RoomStatus status);
+
+    @Query("SELECT r FROM Room r JOIN r.inventory inv WHERE inv.resourceType = :resourceType AND inv.quantity >= :minQuantity AND r.status = br.edu.ifpb.ifmeetup.domain.enums.RoomStatus.AVAILABLE")
+    List<RoomWithResourcesProjection> findProjectedByResourceAndQuantity(
             @Param("resourceType") ResourceType resourceType,
             @Param("minQuantity") Integer minQuantity);
 
