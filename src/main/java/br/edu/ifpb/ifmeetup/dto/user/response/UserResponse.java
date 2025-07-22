@@ -4,6 +4,7 @@ import br.edu.ifpb.ifmeetup.domain.entity.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,19 +25,29 @@ public record UserResponse(
     String phoneNumber,
     
     @Schema(description = "Lista de papéis/roles do usuário no sistema")
-    Set<String> roles
+    Set<String> roles,
+    
+    @Schema(description = "Lista de permissões do usuário no sistema")
+    List<String> permissions
 ) {
     public static UserResponse fromEntity(User user) {
         Set<String> roleNames = user.getRoles().stream()
                 .map(role -> role.getName())
                 .collect(Collectors.toSet());
         
+        List<String> permissions = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> permission.getName())
+                .distinct()
+                .collect(Collectors.toList());
+        
         return new UserResponse(
             user.getId(),
             user.getFirstName() + " " + user.getLastName(),
             user.getEmail(),
             user.getPhoneNumber(),
-            roleNames
+            roleNames,
+            permissions
         );
     }
 } 

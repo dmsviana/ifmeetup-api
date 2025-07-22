@@ -48,7 +48,7 @@ public class Room extends BaseEntity {
 
     @Size(max = 255, message = "A localização da sala deve ter no máximo 255 caracteres")
     @Column(name = "location", length = 255)
-    private String location; // Ex: Bloco D, Laboratório com os pcs bom kjdsffk
+    private String location; // Ex: Bloco D, Laboratório com os pcs bom 
 
     @NotNull(message = "A capacidade da sala é obrigatória")
     @Min(value = 1, message = "A capacidade da sala deve ser maior que 0")

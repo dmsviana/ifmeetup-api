@@ -18,7 +18,6 @@ import br.edu.ifpb.ifmeetup.domain.projection.RoomWithResourcesProjection;
 
 public interface RoomRepository extends JpaRepository<Room, UUID> {
 
-    // Entity-based queries
     List<Room> findByStatus(final RoomStatus status);
 
     List<Room> findByType(final RoomType type);
@@ -27,7 +26,6 @@ public interface RoomRepository extends JpaRepository<Room, UUID> {
 
     Optional<Room> findByNameAndLocation(final String name, final String location);
 
-    // Projection-based queries
     List<RoomProjection> findAllProjectedBy();
 
     Optional<RoomProjection> findProjectedById(UUID id);
@@ -57,7 +55,6 @@ public interface RoomRepository extends JpaRepository<Room, UUID> {
             @Param("resourceType") ResourceType resourceType,
             @Param("minQuantity") Integer minQuantity);
 
-    // Projection-based queries for enhanced functionality
     @Query("SELECT r FROM Room r WHERE r.status = :status AND r.id NOT IN " +
             "(SELECT e.room.id FROM Event e WHERE " +
             "((e.startDateTime < :endDateTime AND e.endDateTime > :startDateTime) AND e.status NOT IN ('REJECTED', 'CANCELED'))"

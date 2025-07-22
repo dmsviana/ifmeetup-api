@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -65,6 +66,11 @@ public class JwtTokenProvider {
             "name", user.getFirstName() + " " + user.getLastName(),
             "roles", user.getRoles().stream()
                     .map(role -> role.getName())
+                    .collect(Collectors.toList()),
+            "permissions", user.getRoles().stream()
+                    .flatMap(role -> role.getPermissions().stream())
+                    .map(permission -> permission.getName())
+                    .distinct()
                     .collect(Collectors.toList())
         );
 
@@ -154,6 +160,16 @@ public class JwtTokenProvider {
 
     public UUID getSessionIdFromToken(String token) {
         return UUID.fromString(getClaimFromToken(token, claims -> claims.get("sid", String.class)));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRolesFromToken(String token) {
+        return getClaimFromToken(token, claims -> claims.get("roles", List.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getPermissionsFromToken(String token) {
+        return getClaimFromToken(token, claims -> claims.get("permissions", List.class));
     }
     
     public LocalDateTime getExpirationDateFromToken(String token) {
