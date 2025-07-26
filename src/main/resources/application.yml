@@ -15,6 +15,48 @@ spring:
         queue-capacity: 25
         keep-alive: "60s"
 
+# Configurações da integração SUAP
+suap:
+  api:
+    base-url: https://suap.ifpb.edu.br/api
+    timeout:
+      connect: 5000  # 5 segundos
+      read: 15000    # 15 segundos
+    retry:
+      max-attempts: 3
+      delay: 1000    # 1 segundo
+  integration:
+    enabled: true
+
+# Configurações OpenFeign
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+        retryer:
+          period: 1000
+          maxPeriod: 2000
+          maxAttempts: 3
+      suap-auth-client:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+      suap-data-client:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+  httpclient:
+    hc5:
+      enabled: true
+  compression:
+    request:
+      enabled: true
+    response:
+      enabled: true
+
 # Configurações customizadas para tarefas agendadas
 ifmeetup:
   scheduler:

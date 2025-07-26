@@ -1,0 +1,1691 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+      "title": "IFMeetup API",
+      "description": "API para gerenciamento de eventos do IFPB",
+      "contact": {
+        "name": "IFPB",
+        "url": "https://www.ifpb.edu.br",
+        "email": "contato@ifpb.edu.br"
+      },
+      "license": {
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      },
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:8080",
+        "description": "Generated server url"
+      }
+    ],
+    "security": [
+      {
+        "JWT": []
+      }
+    ],
+    "tags": [
+      {
+        "name": "Salas",
+        "description": "Endpoints para gerenciamento de salas e espaços físicos"
+      },
+      {
+        "name": "Autenticação",
+        "description": "Endpoints relacionados à autenticação de usuários"
+      }
+    ],
+    "paths": {
+      "/rooms/{id}": {
+        "get": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Buscar sala por ID",
+          "description": "Retorna os detalhes completos de uma sala específica",
+          "operationId": "getRoomById",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID da sala",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para visualizar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Sala encontrada",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Sala não encontrada",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        },
+        "put": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Atualizar dados da sala",
+          "description": "Atualiza todas as informações de uma sala. Requer permissão de administrador ou gerente de salas.",
+          "operationId": "updateRoom",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID da sala",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Sala atualizada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Sala não encontrada",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Dados inválidos",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Conflito com outra sala existente",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Sem permissão para atualizar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        },
+        "delete": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Desabilitar sala",
+          "description": "Desabilita uma sala (soft delete). A sala permanece no sistema mas com status DISABLED. Requer permissão de administrador.",
+          "operationId": "deleteRoom",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID da sala",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para desabilitar salas"
+            },
+            "401": {
+              "description": "Não autenticado"
+            },
+            "204": {
+              "description": "Sala desabilitada com sucesso"
+            },
+            "404": {
+              "description": "Sala não encontrada"
+            },
+            "400": {
+              "description": "Sala possui eventos futuros agendados"
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/rooms": {
+        "get": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Listar todas as salas",
+          "description": "Retorna lista paginada de todas as salas cadastradas",
+          "operationId": "getAllRooms",
+          "parameters": [
+            {
+              "name": "page",
+              "in": "query",
+              "description": "Número da página (inicia em 0)",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "format": "int32",
+                "default": 0
+              }
+            },
+            {
+              "name": "size",
+              "in": "query",
+              "description": "Tamanho da página",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "format": "int32",
+                "default": 20
+              }
+            },
+            {
+              "name": "sort",
+              "in": "query",
+              "description": "Campo para ordenação",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "default": "name"
+              }
+            },
+            {
+              "name": "direction",
+              "in": "query",
+              "description": "Direção da ordenação (ASC ou DESC)",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "default": "ASC"
+              }
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para visualizar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PageRoomResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PageRoomResponse"
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Lista de salas retornada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PageRoomResponse"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        },
+        "post": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Criar nova sala",
+          "description": "Cria uma nova sala no sistema. Requer permissão de administrador ou gerente de salas.",
+          "operationId": "createRoom",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "201": {
+              "description": "Sala criada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Dados inválidos",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Sem permissão para criar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Sala já existe com mesmo nome e localização",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/auth/reset-password": {
+        "post": {
+          "tags": [
+            "Autenticação"
+          ],
+          "summary": "Redefinição de senha",
+          "description": "Redefine a senha de um usuário usando um token de recuperação",
+          "operationId": "resetPassword",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordResetRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Senha redefinida com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Token inválido ou expirado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/auth/register": {
+        "post": {
+          "tags": [
+            "Autenticação"
+          ],
+          "summary": "Registro de usuário",
+          "description": "Registra um novo usuário no sistema",
+          "operationId": "register",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "201": {
+              "description": "Usuário registrado com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Dados inválidos ou email já cadastrado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/auth/logout": {
+        "post": {
+          "tags": [
+            "Autenticação"
+          ],
+          "summary": "Logout",
+          "description": "Realiza o logout do usuário atualmente autenticado e invalida o token JWT",
+          "operationId": "logout",
+          "responses": {
+            "200": {
+              "description": "Logout realizado com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/auth/login": {
+        "post": {
+          "tags": [
+            "Autenticação"
+          ],
+          "summary": "Login de usuário",
+          "description": "Autentica um usuário no sistema",
+          "operationId": "login",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "403": {
+              "description": "Email não verificado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Credenciais inválidas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Login realizado com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/auth/forgot-password": {
+        "post": {
+          "tags": [
+            "Autenticação"
+          ],
+          "summary": "Recuperação de senha",
+          "description": "Envia um email com instruções para recuperação de senha",
+          "operationId": "forgotPassword",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgotPasswordRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "422": {
+              "description": "Email não encontrado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Email enviado com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/rooms/{id}/status": {
+        "patch": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Alterar status da sala",
+          "description": "Altera apenas o status operacional de uma sala. Requer permissão de administrador ou gerente de salas.",
+          "operationId": "updateRoomStatus",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "ID da sala",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomStatusRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Status alterado com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Sem permissão para alterar status",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Mudança de status inválida",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Sala não encontrada",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/RoomResponse"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/rooms/type/{type}": {
+        "get": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Buscar salas por tipo",
+          "description": "Retorna lista de salas filtradas por tipo",
+          "operationId": "getRoomsByType",
+          "parameters": [
+            {
+              "name": "type",
+              "in": "path",
+              "description": "Tipo da sala",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "CLASSROOM",
+                  "AUDITORIUM",
+                  "LABORATORY",
+                  "MEETING_ROOM",
+                  "SHARED_SPACE",
+                  "OTHER"
+                ]
+              }
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para visualizar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Lista de salas retornada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/rooms/status/{status}": {
+        "get": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Buscar salas por status",
+          "description": "Retorna lista de salas filtradas por status operacional",
+          "operationId": "getRoomsByStatus",
+          "parameters": [
+            {
+              "name": "status",
+              "in": "path",
+              "description": "Status da sala",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "AVAILABLE",
+                  "UNAVAILABLE",
+                  "UNDER_MAINTENANCE",
+                  "DISABLED"
+                ]
+              }
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para visualizar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Lista de salas retornada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/rooms/resource/{resourceType}": {
+        "get": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Buscar salas por recurso",
+          "description": "Retorna lista de salas que possuem um recurso específico com quantidade mínima",
+          "operationId": "getRoomsByResource",
+          "parameters": [
+            {
+              "name": "resourceType",
+              "in": "path",
+              "description": "Tipo do recurso",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "PROJECTOR",
+                  "COMPUTER",
+                  "WHITEBOARD",
+                  "SOUND_SYSTEM",
+                  "AIR_CONDITIONING",
+                  "PRINTER",
+                  "VIDEO_CONFERENCE_SYSTEM",
+                  "OTHER"
+                ]
+              }
+            },
+            {
+              "name": "minQuantity",
+              "in": "query",
+              "description": "Quantidade mínima do recurso",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "format": "int32",
+                "default": 1
+              }
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para visualizar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Lista de salas retornada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/rooms/capacity/{minCapacity}": {
+        "get": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Buscar salas por capacidade mínima",
+          "description": "Retorna lista de salas que comportam no mínimo o número especificado de pessoas",
+          "operationId": "getRoomsByMinCapacity",
+          "parameters": [
+            {
+              "name": "minCapacity",
+              "in": "path",
+              "description": "Capacidade mínima desejada",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para visualizar salas",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Lista de salas retornada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/rooms/available": {
+        "get": {
+          "tags": [
+            "Salas"
+          ],
+          "summary": "Buscar salas disponíveis em período",
+          "description": "Retorna lista de salas disponíveis em um período específico (sem conflitos de horário)",
+          "operationId": "getAvailableRooms",
+          "parameters": [
+            {
+              "name": "startDateTime",
+              "in": "query",
+              "description": "Data/hora de início (formato ISO 8601)",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "example": "2025-07-20T10:00:00"
+            },
+            {
+              "name": "endDateTime",
+              "in": "query",
+              "description": "Data/hora de término (formato ISO 8601)",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "example": "2025-07-20T12:00:00"
+            }
+          ],
+          "responses": {
+            "403": {
+              "description": "Sem permissão para visualizar disponibilidade",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Período inválido",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "Lista de salas disponíveis retornada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RoomResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "JWT": []
+            }
+          ]
+        }
+      },
+      "/auth/verify": {
+        "get": {
+          "tags": [
+            "Autenticação"
+          ],
+          "summary": "Verificação de conta",
+          "description": "Verifica uma conta de usuário usando um token enviado por email",
+          "operationId": "verifyAccount",
+          "parameters": [
+            {
+              "name": "token",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Conta verificada com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Token inválido ou expirado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/auth/me": {
+        "get": {
+          "tags": [
+            "Autenticação"
+          ],
+          "summary": "Obter usuário atual",
+          "description": "Retorna os dados do usuário atualmente autenticado",
+          "operationId": "me",
+          "responses": {
+            "200": {
+              "description": "Dados do usuário recuperados com sucesso",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Usuário não autenticado",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "RoomRequest": {
+          "required": [
+            "capacity",
+            "name",
+            "status",
+            "type"
+          ],
+          "type": "object",
+          "properties": {
+            "name": {
+              "maxLength": 100,
+              "minLength": 3,
+              "type": "string",
+              "description": "Nome da sala",
+              "example": "Laboratório de Informática 01"
+            },
+            "location": {
+              "maxLength": 255,
+              "minLength": 0,
+              "type": "string",
+              "description": "Localização da sala",
+              "example": "Bloco D, 2º andar"
+            },
+            "capacity": {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer",
+              "description": "Capacidade máxima de pessoas",
+              "format": "int32",
+              "example": 40
+            },
+            "type": {
+              "type": "string",
+              "description": "Tipo da sala",
+              "example": "LABORATORY",
+              "enum": [
+                "CLASSROOM",
+                "AUDITORIUM",
+                "LABORATORY",
+                "MEETING_ROOM",
+                "SHARED_SPACE",
+                "OTHER"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "description": "Status operacional da sala",
+              "example": "AVAILABLE",
+              "enum": [
+                "AVAILABLE",
+                "UNAVAILABLE",
+                "UNDER_MAINTENANCE",
+                "DISABLED"
+              ]
+            },
+            "description": {
+              "maxLength": 1000,
+              "minLength": 0,
+              "type": "string",
+              "description": "Descrição adicional da sala",
+              "example": "Laboratório equipado com 40 computadores e projetor"
+            },
+            "resources": {
+              "uniqueItems": true,
+              "type": "array",
+              "description": "Recursos disponíveis na sala",
+              "items": {
+                "$ref": "#/components/schemas/RoomResourceRequest"
+              }
+            }
+          },
+          "description": "Dados para criação ou atualização de sala"
+        },
+        "RoomResourceRequest": {
+          "required": [
+            "quantity",
+            "resourceType"
+          ],
+          "type": "object",
+          "properties": {
+            "resourceType": {
+              "type": "string",
+              "description": "Tipo do recurso",
+              "example": "PROJECTOR",
+              "enum": [
+                "PROJECTOR",
+                "COMPUTER",
+                "WHITEBOARD",
+                "SOUND_SYSTEM",
+                "AIR_CONDITIONING",
+                "PRINTER",
+                "VIDEO_CONFERENCE_SYSTEM",
+                "OTHER"
+              ]
+            },
+            "quantity": {
+              "maximum": 999,
+              "minimum": 0,
+              "type": "integer",
+              "description": "Quantidade disponível",
+              "format": "int32",
+              "example": 2
+            },
+            "details": {
+              "maxLength": 255,
+              "minLength": 0,
+              "type": "string",
+              "description": "Detalhes adicionais do recurso",
+              "example": "Projetor Epson 3000 lumens"
+            }
+          },
+          "description": "Dados de um recurso disponível na sala"
+        },
+        "RoomResourceResponse": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Identificador único do recurso",
+              "format": "uuid"
+            },
+            "resourceType": {
+              "type": "string",
+              "description": "Tipo do recurso",
+              "enum": [
+                "PROJECTOR",
+                "COMPUTER",
+                "WHITEBOARD",
+                "SOUND_SYSTEM",
+                "AIR_CONDITIONING",
+                "PRINTER",
+                "VIDEO_CONFERENCE_SYSTEM",
+                "OTHER"
+              ]
+            },
+            "quantity": {
+              "type": "integer",
+              "description": "Quantidade disponível",
+              "format": "int32"
+            },
+            "details": {
+              "type": "string",
+              "description": "Detalhes adicionais do recurso"
+            }
+          },
+          "description": "Resposta com dados de recurso da sala"
+        },
+        "RoomResponse": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Identificador único da sala",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string",
+              "description": "Nome da sala"
+            },
+            "location": {
+              "type": "string",
+              "description": "Localização da sala"
+            },
+            "capacity": {
+              "type": "integer",
+              "description": "Capacidade máxima de pessoas",
+              "format": "int32"
+            },
+            "type": {
+              "type": "string",
+              "description": "Tipo da sala",
+              "enum": [
+                "CLASSROOM",
+                "AUDITORIUM",
+                "LABORATORY",
+                "MEETING_ROOM",
+                "SHARED_SPACE",
+                "OTHER"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "description": "Status operacional da sala",
+              "enum": [
+                "AVAILABLE",
+                "UNAVAILABLE",
+                "UNDER_MAINTENANCE",
+                "DISABLED"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "description": "Descrição adicional da sala"
+            },
+            "resources": {
+              "uniqueItems": true,
+              "type": "array",
+              "description": "Recursos disponíveis na sala",
+              "items": {
+                "$ref": "#/components/schemas/RoomResourceResponse"
+              }
+            },
+            "createdBy": {
+              "type": "string",
+              "description": "Nome do usuário que criou a sala"
+            },
+            "updatedBy": {
+              "type": "string",
+              "description": "Nome do último usuário que atualizou a sala"
+            },
+            "createdAt": {
+              "type": "string",
+              "description": "Data e hora de criação",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "description": "Data e hora da última atualização",
+              "format": "date-time"
+            }
+          },
+          "description": "Resposta com dados da sala"
+        },
+        "PasswordResetRequest": {
+          "required": [
+            "newPassword",
+            "token"
+          ],
+          "type": "object",
+          "properties": {
+            "token": {
+              "type": "string",
+              "description": "Token de redefinição recebido por email",
+              "example": "a1b2c3d4-5678-90ab-cdef-ghijklmnopqr"
+            },
+            "newPassword": {
+              "maxLength": 2147483647,
+              "minLength": 8,
+              "type": "string",
+              "description": "Nova senha (mínimo 8 caracteres)",
+              "writeOnly": true,
+              "example": "novaSenhaSecreta123"
+            }
+          },
+          "description": "Dados para redefinição de senha"
+        },
+        "AuthResponse": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Mensagem informativa sobre o resultado da operação"
+            },
+            "user": {
+              "$ref": "#/components/schemas/UserResponse"
+            },
+            "sessionId": {
+              "type": "string",
+              "description": "Identificador único da sessão, quando aplicável",
+              "format": "uuid"
+            },
+            "expiresAt": {
+              "type": "string",
+              "description": "Data e hora de expiração da sessão, quando aplicável",
+              "format": "date-time"
+            },
+            "token": {
+              "type": "string",
+              "description": "Token JWT de autenticação, quando aplicável"
+            }
+          },
+          "description": "Resposta padrão para operações de autenticação"
+        },
+        "UserResponse": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Identificador único do usuário",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string",
+              "description": "Nome completo do usuário"
+            },
+            "email": {
+              "type": "string",
+              "description": "Email do usuário"
+            },
+            "phoneNumber": {
+              "type": "string",
+              "description": "Número de telefone do usuário"
+            },
+            "roles": {
+              "uniqueItems": true,
+              "type": "array",
+              "description": "Lista de papéis/roles do usuário no sistema",
+              "items": {
+                "type": "string",
+                "description": "Lista de papéis/roles do usuário no sistema"
+              }
+            }
+          },
+          "description": "Resposta com dados básicos do usuário"
+        },
+        "RegisterRequest": {
+          "required": [
+            "email",
+            "firstName",
+            "lastName",
+            "password",
+            "profileType"
+          ],
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "maxLength": 50,
+              "minLength": 2,
+              "type": "string",
+              "description": "Nome do usuário",
+              "example": "Maria"
+            },
+            "lastName": {
+              "maxLength": 50,
+              "minLength": 2,
+              "type": "string",
+              "description": "Sobrenome do usuário",
+              "example": "Silva"
+            },
+            "email": {
+              "type": "string",
+              "description": "Email do usuário",
+              "example": "maria.silva@exemplo.com"
+            },
+            "phoneNumber": {
+              "pattern": "^\\(?\\d{2}\\)?[\\s-]?\\d{4,5}-?\\d{4}$",
+              "type": "string",
+              "description": "Número de telefone do usuário",
+              "example": "(83) 99999-9999"
+            },
+            "password": {
+              "maxLength": 2147483647,
+              "minLength": 8,
+              "type": "string",
+              "description": "Senha do usuário (mínimo 8 caracteres)",
+              "writeOnly": true,
+              "example": "senhaSecreta123"
+            },
+            "profileType": {
+              "type": "string",
+              "description": "Tipo de perfil do usuário",
+              "example": "STUDENT",
+              "enum": [
+                "ADMIN",
+                "COORDINATOR",
+                "TEACHER",
+                "STUDENT"
+              ]
+            }
+          },
+          "description": "Dados para registro de novo usuário"
+        },
+        "LoginRequest": {
+          "required": [
+            "email",
+            "password"
+          ],
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "description": "Email do usuário",
+              "example": "usuario@exemplo.com"
+            },
+            "password": {
+              "type": "string",
+              "description": "Senha do usuário",
+              "writeOnly": true,
+              "example": "senhaSecreta123"
+            }
+          },
+          "description": "Dados para autenticação de usuário"
+        },
+        "ForgotPasswordRequest": {
+          "required": [
+            "email"
+          ],
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string"
+            }
+          }
+        },
+        "RoomStatusRequest": {
+          "required": [
+            "status"
+          ],
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Novo status da sala",
+              "example": "UNDER_MAINTENANCE",
+              "enum": [
+                "AVAILABLE",
+                "UNAVAILABLE",
+                "UNDER_MAINTENANCE",
+                "DISABLED"
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "description": "Motivo da mudança de status",
+              "example": "Manutenção preventiva dos equipamentos"
+            }
+          },
+          "description": "Dados para alteração de status da sala"
+        },
+        "PageRoomResponse": {
+          "type": "object",
+          "properties": {
+            "totalPages": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "totalElements": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "pageable": {
+              "$ref": "#/components/schemas/PageableObject"
+            },
+            "first": {
+              "type": "boolean"
+            },
+            "last": {
+              "type": "boolean"
+            },
+            "size": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RoomResponse"
+              }
+            },
+            "number": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "sort": {
+              "$ref": "#/components/schemas/SortObject"
+            },
+            "numberOfElements": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "empty": {
+              "type": "boolean"
+            }
+          }
+        },
+        "PageableObject": {
+          "type": "object",
+          "properties": {
+            "paged": {
+              "type": "boolean"
+            },
+            "pageNumber": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "pageSize": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "unpaged": {
+              "type": "boolean"
+            },
+            "offset": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "sort": {
+              "$ref": "#/components/schemas/SortObject"
+            }
+          }
+        },
+        "SortObject": {
+          "type": "object",
+          "properties": {
+            "sorted": {
+              "type": "boolean"
+            },
+            "unsorted": {
+              "type": "boolean"
+            },
+            "empty": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "securitySchemes": {
+        "JWT": {
+          "type": "http",
+          "description": "JWT token para autenticação",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    }
+  }

@@ -40,21 +40,19 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(req ->
-                        req.requestMatchers(
-                                        "/auth/login",
-                                        "/auth/register",
-                                        "/auth/verify",
-                                        "/auth/reset-password",
-                                        "/auth/forgot-password",
-                                        "/v3/api-docs/**",
-                                        "/api/v3/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html",
-                                        "/error"
-                                ).permitAll()
-                                .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(req -> req.requestMatchers(
+                        "/auth/login",
+                        "/auth/register",
+                        "/auth/verify",
+                        "/auth/reset-password",
+                        "/auth/forgot-password",
+                        "/auth/suap/login",
+                        "/v3/api-docs/**",
+                        "/api/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/error").permitAll()
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -83,7 +81,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3001", "http://localhost:5173"));
+        configuration
+                .setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3001", "http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));

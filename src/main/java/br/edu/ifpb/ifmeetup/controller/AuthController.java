@@ -17,7 +17,11 @@ import br.edu.ifpb.ifmeetup.dto.auth.request.PasswordResetRequest;
 import br.edu.ifpb.ifmeetup.dto.auth.request.RegisterRequest;
 import br.edu.ifpb.ifmeetup.dto.auth.response.AuthResponse;
 
+import br.edu.ifpb.ifmeetup.exception.AuthenticationException;
 import br.edu.ifpb.ifmeetup.exception.EmailNotVerifiedException;
+import br.edu.ifpb.ifmeetup.exception.ExternalServiceException;
+import br.edu.ifpb.ifmeetup.integration.suap.dto.SuapLoginRequest;
+import br.edu.ifpb.ifmeetup.integration.suap.service.SuapAuthService;
 import br.edu.ifpb.ifmeetup.service.auth.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController implements AuthApiContract {
 
     private final AuthService authService;
+    private final SuapAuthService suapAuthService;
     
     @Value("${application.url:http://localhost:8080}")
     private String applicationUrl;
@@ -82,5 +87,21 @@ public class AuthController implements AuthApiContract {
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> me() {
         return ResponseEntity.ok(authService.me());
+    }
+
+    @Override
+    @PostMapping("/suap/login")
+    public ResponseEntity<AuthResponse> loginWithSuap(
+            @Valid @RequestBody SuapLoginRequest request,
+            HttpServletResponse response) {
+        try {
+            return ResponseEntity.ok(suapAuthService.loginWithSuap(request, response));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(AuthResponse.error(e.getMessage()));
+        } catch (ExternalServiceException e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(AuthResponse.error(e.getMessage()));
+        }
     }
 } 
