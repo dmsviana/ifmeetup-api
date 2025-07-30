@@ -21,10 +21,73 @@ spring:
       settings:
         trace: false
         web-allow-others: false
+  # Configurações de segurança para testes
+  security:
+    jwt:
+      secret: test-secret-key-for-jwt-token-generation-in-tests-environment-only
+      expiration: 3600000
+  # Configurações de email para testes (mock)
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
+# Configurações específicas da integração SUAP para testes
+suap:
+  api:
+    base-url: http://localhost:8089  # WireMock server para testes
+    timeout:
+      connect: 2000  # Timeouts menores para testes
+      read: 5000
+    retry:
+      max-attempts: 1  # Sem retry em testes para falhar rápido
+      delay: 100
+  integration:
+    enabled: true
+    sync-interval: PT1M  # Sincronização mais frequente para testes
+  security:
+    validation:
+      matricula-pattern: "^\\d{7,12}$"
+      token-validation-enabled: true
+
+# Configurações OpenFeign para testes
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: full  # Log completo para debug em testes
+        retryer:
+          period: 100
+          maxPeriod: 200
+          maxAttempts: 1
+      suap-auth-client:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: full
+      suap-data-client:
+        connectTimeout: 2000
+        readTimeout: 5000
+        loggerLevel: full
+  httpclient:
+    hc5:
+      enabled: true
 
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE # Para ver os parâmetros das queries
-    # br.edu.ifpb.ifmeetup: DEBUG # Ajuste conforme necessidade
+    br.edu.ifpb.ifmeetup: DEBUG
+    # Logs específicos da integração SUAP para testes
+    br.edu.ifpb.ifmeetup.integration.suap: DEBUG
+    feign: DEBUG
+    org.apache.http: DEBUG
+    feign.Retryer: DEBUG

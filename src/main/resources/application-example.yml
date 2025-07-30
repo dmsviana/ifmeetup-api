@@ -83,4 +83,42 @@ springdoc:
 
 # Application configuration
 application:
-  url: http://localhost:8080 
+  url: http://localhost:8080
+
+# Configurações da integração SUAP (exemplo)
+suap:
+  api:
+    base-url: https://suap.ifpb.edu.br/api
+    timeout:
+      connect: 5000  # 5 segundos
+      read: 15000    # 15 segundos
+    retry:
+      max-attempts: 3
+      delay: 1000    # 1 segundo
+  integration:
+    enabled: true  # Feature flag para habilitar/desabilitar integração
+    sync-interval: PT24H  # Intervalo de sincronização (formato ISO-8601)
+  security:
+    validation:
+      matricula-pattern: "^\\d{7,12}$"  # Padrão de validação de matrícula
+      token-validation-enabled: true
+
+# Configurações OpenFeign (exemplo)
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+      suap-auth-client:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+      suap-data-client:
+        connectTimeout: 5000
+        readTimeout: 15000
+        loggerLevel: basic
+  httpclient:
+    hc5:
+      enabled: true

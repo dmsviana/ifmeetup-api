@@ -25,7 +25,7 @@ public record SuapUserData(
             throw new IllegalArgumentException("SuapServidorResponse não pode ser null");
         }
         
-        String generatedEmail = generateEmailFromMatricula(servidor.matricula());
+        String generatedEmail = generateEmailFromName(servidor.nome());
         String setorExercicio = servidor.setorExercicio() != null ? servidor.setorExercicio().nome() : null;
         String situacao = servidor.situacao() != null ? servidor.situacao().nome() : null;
         
@@ -39,8 +39,8 @@ public record SuapUserData(
             servidor.funcaoCodigo(),
             setorExercicio,
             situacao,
-            null, // curso - não aplicável para servidor
-            null  // situacaoAluno - não aplicável para servidor
+            null, // curso - não existe em servidor
+            null  // situacaoAluno - não existe em servidor
         );
     }
     
@@ -49,7 +49,7 @@ public record SuapUserData(
             throw new IllegalArgumentException("SuapAlunoResponse não pode ser null");
         }
         
-        String generatedEmail = generateEmailFromMatricula(aluno.matricula());
+        String generatedEmail = generateEmailFromName(aluno.nome());
         String curso = aluno.curso() != null ? aluno.curso().nome() : null;
         
         return new SuapUserData(
@@ -58,21 +58,41 @@ public record SuapUserData(
             aluno.matricula(),
             SuapUserType.ALUNO,
             generatedEmail,
-            null, // cargoEmprego - não aplicável para aluno
-            null, // funcaoCodigo - não aplicável para aluno
-            null, // setorExercicio - não aplicável para aluno
-            null, // situacao - não aplicável para aluno
+            null, // cargoEmprego - não existe em aluno
+            null, // funcaoCodigo - não existe em aluno
+            null, // setorExercicio - não existe em aluno
+            null, // situacao - não existe em aluno
             curso,
             aluno.situacao()
         );
     }
     
-    private static String generateEmailFromMatricula(String matricula) {
-        if (matricula == null || matricula.trim().isEmpty()) {
-            throw new IllegalArgumentException("Matrícula não pode ser null ou vazia");
+    private static String generateEmailFromName(String nome) {
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome não pode ser null ou vazio");
         }
         
-        return matricula.trim() + "@ifpb.edu.br";
+        // normaliza o nome removendo acentos e caracteres especiais
+        String normalized = nome.trim()
+            .toLowerCase()
+            .replaceAll("[áàâãä]", "a")
+            .replaceAll("[éèêë]", "e")
+            .replaceAll("[íìîï]", "i")
+            .replaceAll("[óòôõö]", "o")
+            .replaceAll("[úùûü]", "u")
+            .replaceAll("[ç]", "c")
+            .replaceAll("[^a-z\\s]", "") // remove caracteres especiais
+            .replaceAll("\\s+", " "); // normaliza espaços
+        
+        String[] parts = normalized.split("\\s+");
+        
+        if (parts.length == 1) {
+            // nome com uma palavra: "diogo@ifpb.edu.br"
+            return parts[0] + "@ifpb.edu.br";
+        } else {
+            // nome com múltiplas palavras: "diogo.marcelo@ifpb.edu.br"
+            return parts[0] + "." + parts[parts.length - 1] + "@ifpb.edu.br";
+        }
     }
     
     public boolean isServidor() {

@@ -27,6 +27,11 @@ suap:
       delay: 1000    # 1 segundo
   integration:
     enabled: true
+    sync-interval: PT24H  # Sincronização a cada 24 horas
+  security:
+    validation:
+      matricula-pattern: "^\\d{3,15}$"  
+      token-validation-enabled: true
 
 # Configurações OpenFeign
 feign:
@@ -40,14 +45,23 @@ feign:
           period: 1000
           maxPeriod: 2000
           maxAttempts: 3
+        errorDecoder: br.edu.ifpb.ifmeetup.integration.suap.config.SuapErrorDecoder
       suap-auth-client:
         connectTimeout: 5000
         readTimeout: 10000
-        loggerLevel: basic
+        loggerLevel: full  # Log completo para debug de autenticação
+        retryer:
+          period: 1000
+          maxPeriod: 2000
+          maxAttempts: 3
       suap-data-client:
         connectTimeout: 5000
         readTimeout: 15000
-        loggerLevel: basic
+        loggerLevel: full  # Log completo para debug de dados
+        retryer:
+          period: 1000
+          maxPeriod: 2000
+          maxAttempts: 3
   httpclient:
     hc5:
       enabled: true
@@ -56,6 +70,18 @@ feign:
       enabled: true
     response:
       enabled: true
+
+# Configurações de logging para SUAP
+logging:
+  level:
+    # Logs específicos da integração SUAP
+    br.edu.ifpb.ifmeetup.integration.suap: DEBUG
+    # Logs do OpenFeign para debug de requisições HTTP
+    feign: DEBUG
+    # Logs de clientes HTTP
+    org.apache.http: DEBUG
+    # Logs de retry
+    feign.Retryer: DEBUG
 
 # Configurações customizadas para tarefas agendadas
 ifmeetup:

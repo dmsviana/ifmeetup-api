@@ -30,7 +30,7 @@ class SuapUserDataTest {
         assertEquals("Felipe Omena", userData.nome());
         assertEquals("1323726", userData.matricula());
         assertEquals(SuapUserType.SERVIDOR, userData.userType());
-        assertEquals("1323726@ifpb.edu.br", userData.generatedEmail());
+        assertEquals("felipe.omena@ifpb.edu.br", userData.generatedEmail());
         assertEquals("PROFESSOR DO ENSINO BÁSICO, TÉCNICO E TECNOLÓGICO", userData.cargoEmprego());
         assertEquals(1, userData.funcaoCodigo());
         assertEquals("Coordenação de Informática", userData.setorExercicio());
@@ -63,7 +63,7 @@ class SuapUserDataTest {
         assertEquals("Damião Ribeiro", userData.nome());
         assertEquals("3360670", userData.matricula());
         assertEquals(SuapUserType.SERVIDOR, userData.userType());
-        assertEquals("3360670@ifpb.edu.br", userData.generatedEmail());
+        assertEquals("damiao.ribeiro@ifpb.edu.br", userData.generatedEmail());
         assertEquals("PROFESSOR DO ENSINO BÁSICO, TÉCNICO E TECNOLÓGICO", userData.cargoEmprego());
         assertNull(userData.funcaoCodigo());
         assertNull(userData.setorExercicio());
@@ -94,7 +94,7 @@ class SuapUserDataTest {
         assertEquals("Diogo Marcelo", userData.nome());
         assertEquals("202215020007", userData.matricula());
         assertEquals(SuapUserType.ALUNO, userData.userType());
-        assertEquals("202215020007@ifpb.edu.br", userData.generatedEmail());
+        assertEquals("diogo.marcelo@ifpb.edu.br", userData.generatedEmail());
         assertNull(userData.cargoEmprego());
         assertNull(userData.funcaoCodigo());
         assertNull(userData.setorExercicio());
@@ -124,7 +124,7 @@ class SuapUserDataTest {
         assertEquals("Aluno Teste", userData.nome());
         assertEquals("202215020008", userData.matricula());
         assertEquals(SuapUserType.ALUNO, userData.userType());
-        assertEquals("202215020008@ifpb.edu.br", userData.generatedEmail());
+        assertEquals("aluno.teste@ifpb.edu.br", userData.generatedEmail());
         assertNull(userData.cargoEmprego());
         assertNull(userData.funcaoCodigo());
         assertNull(userData.setorExercicio());
@@ -171,17 +171,17 @@ class SuapUserDataTest {
         SuapUserData userData = SuapUserData.fromAluno(aluno);
 
         // Then
-        assertEquals("123456789@ifpb.edu.br", userData.generatedEmail());
+        assertEquals("test.user@ifpb.edu.br", userData.generatedEmail());
     }
 
     @Test
-    void shouldGenerateEmailWithTrimmedMatricula() {
+    void shouldGenerateEmailWithSpecialCharacters() {
         // Given
         SuapCursoResponse curso = new SuapCursoResponse("uuid-curso", "Curso Teste");
         SuapAlunoResponse aluno = new SuapAlunoResponse(
             "uuid-test",
-            "Test User",
-            "  123456789  ", // matrícula com espaços
+            "José da Silva",
+            "123456789",
             curso,
             "ATIVO"
         );
@@ -190,6 +190,47 @@ class SuapUserDataTest {
         SuapUserData userData = SuapUserData.fromAluno(aluno);
 
         // Then
-        assertEquals("123456789@ifpb.edu.br", userData.generatedEmail());
+        assertEquals("jose.silva@ifpb.edu.br", userData.generatedEmail());
+    }
+
+    @Test
+    void shouldGenerateEmailWithSingleName() {
+        // Given
+        SuapCursoResponse curso = new SuapCursoResponse("uuid-curso", "Curso Teste");
+        SuapAlunoResponse aluno = new SuapAlunoResponse(
+            "uuid-test",
+            "Madonna",
+            "123456789",
+            curso,
+            "ATIVO"
+        );
+
+        // When
+        SuapUserData userData = SuapUserData.fromAluno(aluno);
+
+        // Then
+        assertEquals("madonna@ifpb.edu.br", userData.generatedEmail());
+    }
+
+    @Test
+    void shouldGenerateEmailWithAccentsAndSpecialChars() {
+        // Given
+        SuapSetorResponse setor = new SuapSetorResponse("uuid-setor", "DEPTO", "Departamento");
+        SuapSituacaoResponse situacao = new SuapSituacaoResponse("ATIVO", "Ativo");
+        SuapServidorResponse servidor = new SuapServidorResponse(
+            "uuid-test",
+            "João Ção Ñoño",
+            "1234567",
+            "PROFESSOR",
+            null,
+            setor,
+            situacao
+        );
+
+        // When
+        SuapUserData userData = SuapUserData.fromServidor(servidor);
+
+        // Then
+        assertEquals("joao.nono@ifpb.edu.br", userData.generatedEmail());
     }
 }

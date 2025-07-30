@@ -11,14 +11,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "suap_users", indexes = {
     @Index(name = "idx_suap_user_matricula", columnList = "matricula", unique = true),
     @Index(name = "idx_suap_user_generated_email", columnList = "generated_email"),
-    @Index(name = "idx_suap_user_suap_uuid", columnList = "suap_uuid"),
-    @Index(name = "idx_suap_user_last_sync", columnList = "last_sync")
+    @Index(name = "idx_suap_user_suap_uuid", columnList = "suap_uuid")
 })
 @Getter
 @Setter
@@ -69,18 +68,10 @@ public class SuapUser extends BaseEntity {
     @Column(name = "suap_uuid", nullable = false)
     private String suapUuid;
 
-    @Column(name = "last_sync")
-    private LocalDateTime lastSync;
-
     @NotBlank
     @Size(max = 100)
     @Column(name = "generated_email", nullable = false)
     private String generatedEmail;
-
-    // Relacionamento opcional com User do sistema IFMeetup
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
 
     public SuapUser(String matricula, String nome, SuapUserType userType, String suapUuid, String generatedEmail) {
         this.matricula = matricula;
@@ -88,11 +79,6 @@ public class SuapUser extends BaseEntity {
         this.userType = userType;
         this.suapUuid = suapUuid;
         this.generatedEmail = generatedEmail;
-        this.lastSync = LocalDateTime.now();
-    }
-
-    public void updateLastSync() {
-        this.lastSync = LocalDateTime.now();
     }
 
     public boolean isServidor() {
@@ -101,12 +87,5 @@ public class SuapUser extends BaseEntity {
 
     public boolean isAluno() {
         return SuapUserType.ALUNO.equals(this.userType);
-    }
-
-    public boolean isDataOutdated() {
-        if (lastSync == null) {
-            return true;
-        }
-        return lastSync.isBefore(LocalDateTime.now().minusHours(24));
     }
 }

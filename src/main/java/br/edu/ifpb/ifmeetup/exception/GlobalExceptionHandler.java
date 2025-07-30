@@ -306,6 +306,116 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
+     * Trata exceções de autenticação SUAP.
+     */
+    @ExceptionHandler(SuapAuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleSuapAuthenticationException(
+            @NonNull SuapAuthenticationException ex,
+            @NonNull HttpServletRequest request) {
+
+        String path = request.getRequestURI();
+        String clientIp = getClientIpAddress(request);
+        
+        // Log de nível WARNING para falhas de autenticação SUAP
+        log.warn("SUAP authentication failure from IP {}: {} - Error code: {} - Details: {}", 
+                clientIp, ex.getMessage(), ex.getErrorCode(), sanitizeDetails(ex.getDetails()));
+
+        // Usar mensagem amigável ao usuário
+        String userMessage = br.edu.ifpb.ifmeetup.integration.suap.util.SuapErrorMessages
+                .getCompleteErrorMessage(ex.getErrorCode());
+
+        ErrorResponse errorResponse = ErrorResponse.authentication(
+                userMessage,
+                ex.getErrorCode(),
+                path
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
+     * Trata exceções de dados não encontrados no SUAP.
+     */
+    @ExceptionHandler(SuapDataNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleSuapDataNotFoundException(
+            @NonNull SuapDataNotFoundException ex,
+            @NonNull HttpServletRequest request) {
+
+        String path = request.getRequestURI();
+        
+        // Log de nível INFO para dados não encontrados no SUAP
+        log.info("SUAP data not found in request to {}: {} - Error code: {} - Details: {}", 
+                path, ex.getMessage(), ex.getErrorCode(), sanitizeDetails(ex.getDetails()));
+
+        // Usar mensagem amigável ao usuário
+        String userMessage = br.edu.ifpb.ifmeetup.integration.suap.util.SuapErrorMessages
+                .getCompleteErrorMessage(ex.getErrorCode());
+
+        ErrorResponse errorResponse = ErrorResponse.notFound(
+                userMessage, 
+                path
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Trata exceções de serviço SUAP indisponível.
+     */
+    @ExceptionHandler(SuapServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleSuapServiceUnavailableException(
+            @NonNull SuapServiceUnavailableException ex,
+            @NonNull HttpServletRequest request) {
+
+        String path = request.getRequestURI();
+        
+        // Log de nível ERROR para indisponibilidade do SUAP
+        log.error("SUAP service unavailable in request to {}: {} - Error code: {} - Details: {}", 
+                path, ex.getMessage(), ex.getErrorCode(), sanitizeDetails(ex.getDetails()), ex);
+
+        // Usar mensagem amigável ao usuário
+        String userMessage = br.edu.ifpb.ifmeetup.integration.suap.util.SuapErrorMessages
+                .getCompleteErrorMessage(ex.getErrorCode());
+
+        ErrorResponse errorResponse = ErrorResponse.externalService(
+                userMessage,
+                ex.getErrorCode(),
+                path,
+                sanitizeDetails(ex.getDetails())
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
+    }
+
+    /**
+     * Trata exceções gerais de integração SUAP.
+     */
+    @ExceptionHandler(SuapIntegrationException.class)
+    public ResponseEntity<ErrorResponse> handleSuapIntegrationException(
+            @NonNull SuapIntegrationException ex,
+            @NonNull HttpServletRequest request) {
+
+        String path = request.getRequestURI();
+        
+        // Log de nível ERROR para problemas gerais de integração SUAP
+        log.error("SUAP integration error in request to {}: {} - Error code: {} - Details: {}", 
+                path, ex.getMessage(), ex.getErrorCode(), sanitizeDetails(ex.getDetails()), ex);
+
+        // Usar mensagem amigável ao usuário
+        String userMessage = br.edu.ifpb.ifmeetup.integration.suap.util.SuapErrorMessages
+                .getCompleteErrorMessage(ex.getErrorCode());
+
+        ErrorResponse errorResponse = ErrorResponse.externalService(
+                userMessage,
+                ex.getErrorCode(),
+                path,
+                sanitizeDetails(ex.getDetails())
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
+    }
+
+    /**
      * Trata todas as exceções não mapeadas especificamente.
      */
     @ExceptionHandler(Exception.class)

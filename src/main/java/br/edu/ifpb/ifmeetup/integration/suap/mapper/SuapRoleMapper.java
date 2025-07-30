@@ -45,18 +45,15 @@ public class SuapRoleMapper {
         logger.debug("Iniciando mapeamento de ProfileType para usuário: matricula={}, userType={}", 
                     userData.matricula(), userData.userType());
         
-        // Regra 1: Alunos sempre recebem ProfileType.STUDENT
         if (userData.userType() == SuapUserType.ALUNO) {
             logger.debug("Usuário é ALUNO, mapeando para ProfileType.STUDENT");
             return ProfileType.STUDENT;
         }
         
-        // Para servidores, aplicar regras específicas
         if (userData.userType() == SuapUserType.SERVIDOR) {
             return mapServidorToProfileType(userData);
         }
         
-        // Fallback para casos não previstos
         logger.warn("UserType não reconhecido: {}, retornando ProfileType.TEACHER como padrão", 
                    userData.userType());
         return ProfileType.TEACHER;
@@ -73,26 +70,21 @@ public class SuapRoleMapper {
         logger.debug("Mapeando servidor: cargo={}, funcaoCodigo={}, setor={}", 
                     cargoEmprego, funcaoCodigo, setorExercicio);
         
-        // Regra 2: Verificar se é cargo administrativo de coordenação
         if (isAdministrativeCoordinator(cargoEmprego, setorExercicio)) {
             logger.debug("Servidor identificado como coordenador administrativo");
             return ProfileType.COORDINATOR;
         }
         
-        // Regra 3: Verificar se é professor
         if (isProfessor(cargoEmprego)) {
-            // Regra 3a: Professor com função de coordenação
             if (isCoordinator(funcaoCodigo, setorExercicio)) {
                 logger.debug("Professor identificado como coordenador por função ou setor");
                 return ProfileType.COORDINATOR;
             }
             
-            // Regra 3b: Professor sem função de coordenação
             logger.debug("Professor identificado como teacher (sem função de coordenação)");
             return ProfileType.TEACHER;
         }
         
-        // Regra 4: Padrão para servidores que não se enquadram nas regras anteriores
         logger.debug("Servidor não se enquadra em regras específicas, aplicando padrão ProfileType.TEACHER");
         return ProfileType.TEACHER;
     }
@@ -110,13 +102,13 @@ public class SuapRoleMapper {
         logger.debug("Verificando função de coordenação: funcaoCodigo={}, setorExercicio={}", 
                     funcaoCodigo, setorExercicio);
         
-        // Critério 1: Possui código de função (indica função específica)
+        // possui código de função (indica função específica)
         if (funcaoCodigo != null) {
             logger.debug("Servidor possui funcaoCodigo={}, considerado coordenador", funcaoCodigo);
             return true;
         }
         
-        // Critério 2: Setor de exercício contém palavras-chave de coordenação
+        // setor de exercício contém palavras-chave de coordenação
         if (setorExercicio != null && !setorExercicio.trim().isEmpty()) {
             String setorUpper = setorExercicio.toUpperCase();
             
@@ -146,7 +138,7 @@ public class SuapRoleMapper {
         logger.debug("Verificando cargo administrativo de coordenação: cargo={}, setor={}", 
                     cargoEmprego, setorExercicio);
         
-        // Critério 1: Cargo contém palavras-chave administrativas
+        // cargo contém palavras-chave administrativas
         if (cargoEmprego != null && !cargoEmprego.trim().isEmpty()) {
             String cargoUpper = cargoEmprego.toUpperCase();
             
@@ -159,7 +151,7 @@ public class SuapRoleMapper {
             }
         }
         
-        // Critério 2: Setor contém "COORD" (específico para cargos administrativos)
+        // setor contém "COORD" (específico para cargos administrativos)
         if (setorExercicio != null && !setorExercicio.trim().isEmpty()) {
             String setorUpper = setorExercicio.toUpperCase();
             

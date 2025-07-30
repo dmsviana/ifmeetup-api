@@ -23,10 +23,8 @@ import java.util.regex.Pattern;
 @Component
 public class SuapSecurityValidator {
     
-    // Padrão para validação de matrícula (7-12 dígitos)
-    private static final Pattern MATRICULA_PATTERN = Pattern.compile("^\\d{7,12}$");
+    private static final Pattern MATRICULA_PATTERN = Pattern.compile("^\\d{3,15}$");
     
-    // Tempo mínimo de expiração de token (em segundos)
     private static final long MIN_TOKEN_EXPIRY_SECONDS = 300; // 5 minutos
     
     /**
@@ -38,28 +36,24 @@ public class SuapSecurityValidator {
     public void validateCredentials(SuapLoginRequest request) {
         log.debug("Validando credenciais SUAP para matrícula: {}", request.username());
         
-        // Validar se username não é nulo ou vazio
         if (request.username() == null || request.username().trim().isEmpty()) {
             log.warn("Tentativa de login com username vazio");
             throw ValidationException.forField("username", request.username(), 
                 "Username é obrigatório");
         }
         
-        // Validar se password não é nulo ou vazio
         if (request.password() == null || request.password().trim().isEmpty()) {
             log.warn("Tentativa de login com password vazio para matrícula: {}", request.username());
             throw ValidationException.forField("password", null, 
                 "Password é obrigatório");
         }
         
-        // Validar formato da matrícula
         if (!isValidMatriculaFormat(request.username())) {
             log.warn("Tentativa de login com formato de matrícula inválido: {}", request.username());
             throw ValidationException.forField("username", request.username(), 
                 "Matrícula deve conter entre 7 e 12 dígitos");
         }
         
-        // Validar comprimento mínimo da senha
         if (request.password().trim().length() < 3) {
             log.warn("Tentativa de login com senha muito curta para matrícula: {}", request.username());
             throw ValidationException.forField("password", null, 
@@ -85,19 +79,16 @@ public class SuapSecurityValidator {
                 "Resposta de token SUAP é inválida");
         }
         
-        // Validar se access token está presente
         if (tokenResponse.access() == null || tokenResponse.access().trim().isEmpty()) {
             log.error("Access token ausente na resposta SUAP para matrícula: {}", matricula);
             throw ValidationException.forField("access", tokenResponse.access(), 
                 "Access token é obrigatório");
         }
         
-        // Validar se refresh token está presente
         if (tokenResponse.refresh() == null || tokenResponse.refresh().trim().isEmpty()) {
             log.warn("Refresh token ausente na resposta SUAP para matrícula: {}", matricula);
         }
         
-        // Validar tempo de expiração
         if (tokenResponse.accessExpiresIn() != null) {
             if (tokenResponse.accessExpiresIn() < MIN_TOKEN_EXPIRY_SECONDS) {
                 log.warn("Token SUAP com tempo de expiração muito baixo ({} segundos) para matrícula: {}", 
@@ -111,7 +102,6 @@ public class SuapSecurityValidator {
             }
         }
         
-        // Validar formato básico do JWT (deve ter 3 partes separadas por ponto)
         String[] tokenParts = tokenResponse.access().split("\\.");
         if (tokenParts.length != 3) {
             log.error("Formato de token JWT inválido para matrícula: {}", matricula);
@@ -140,10 +130,8 @@ public class SuapSecurityValidator {
                 "Dados de usuário SUAP são obrigatórios");
         }
         
-        // Validar campos essenciais
         validateEssentialUserFields(userData);
         
-        // Validar dados específicos por tipo de usuário
         if (userData.isServidor()) {
             validateServidorData(userData);
         } else if (userData.isAluno()) {
@@ -163,14 +151,12 @@ public class SuapSecurityValidator {
      * Valida campos essenciais presentes em todos os tipos de usuário.
      */
     private void validateEssentialUserFields(SuapUserData userData) {
-        // Validar UUID
         if (userData.uuid() == null || userData.uuid().trim().isEmpty()) {
             log.error("UUID ausente nos dados SUAP para matrícula: {}", userData.matricula());
             throw ValidationException.forField("uuid", userData.uuid(), 
                 "UUID do usuário é obrigatório");
         }
         
-        // Validar nome
         if (userData.nome() == null || userData.nome().trim().isEmpty()) {
             log.error("Nome ausente nos dados SUAP para matrícula: {}", userData.matricula());
             throw ValidationException.forField("nome", userData.nome(), 
@@ -183,7 +169,6 @@ public class SuapSecurityValidator {
                 "Nome deve ter pelo menos 2 caracteres");
         }
         
-        // Validar matrícula
         if (userData.matricula() == null || userData.matricula().trim().isEmpty()) {
             log.error("Matrícula ausente nos dados SUAP");
             throw ValidationException.forField("matricula", userData.matricula(), 
@@ -196,14 +181,12 @@ public class SuapSecurityValidator {
                 "Formato de matrícula inválido");
         }
         
-        // Validar userType
         if (userData.userType() == null) {
             log.error("Tipo de usuário ausente nos dados SUAP para matrícula: {}", userData.matricula());
             throw ValidationException.forField("userType", null, 
                 "Tipo de usuário é obrigatório");
         }
         
-        // Validar email gerado
         if (userData.generatedEmail() == null || userData.generatedEmail().trim().isEmpty()) {
             log.error("Email gerado ausente nos dados SUAP para matrícula: {}", userData.matricula());
             throw ValidationException.forField("generatedEmail", userData.generatedEmail(), 
