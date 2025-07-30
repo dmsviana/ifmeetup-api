@@ -16,7 +16,6 @@ import br.edu.ifpb.ifmeetup.domain.projection.EventParticipantProjection;
 
 public interface EventParticipantRepository extends JpaRepository<EventParticipant, UUID> {
 
-    // Entity-based queries
     List<EventParticipant> findByEvent(Event event);
 
     List<EventParticipant> findByUser(User user);
@@ -29,14 +28,11 @@ public interface EventParticipantRepository extends JpaRepository<EventParticipa
 
     List<EventParticipant> findByEventAndAttendanceStatus(Event event, AttendanceStatus attendanceStatus);
 
-    // Para buscar todos os eventos em que um usuário está inscrito (ou participou)
     @Query("SELECT ep.event FROM EventParticipant ep WHERE ep.user = :user")
     List<Event> findEventsRegisteredByUser(@Param("user") User user);
 
-    // Para verificar se um usuário está inscrito em um evento específico
     boolean existsByEventAndUser(Event event, User user);
 
-    // Projection-based queries
     List<EventParticipantProjection> findAllProjectedBy();
 
     Optional<EventParticipantProjection> findProjectedById(UUID id);

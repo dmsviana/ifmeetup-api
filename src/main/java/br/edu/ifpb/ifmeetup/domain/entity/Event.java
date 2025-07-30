@@ -3,6 +3,7 @@ package br.edu.ifpb.ifmeetup.domain.entity;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -49,8 +50,7 @@ public class Event extends BaseEntity {
     private String title;
 
     @NotBlank(message = "A descrição do evento é obrigatória")
-    @Lob
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @NotNull(message = "O organizador do evento é obrigatório")
@@ -99,8 +99,7 @@ public class Event extends BaseEntity {
     @Column(name = "approval_date_time")
     private LocalDateTime approvalDateTime;
 
-    @Lob
-    @Column(name = "rejection_reason")
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -113,4 +112,103 @@ public class Event extends BaseEntity {
         }
         return endDateTime.isAfter(startDateTime);
     }
+    
+    /**
+     * Verifica se houve alteração na sala ou nos horários do evento.
+     * 
+     * <p>Este método é útil para determinar se é necessário revalidar
+     * conflitos de agendamento ao atualizar um evento.
+     * 
+     * @param newRoomId ID da nova sala
+     * @param newStartDateTime novo horário de início
+     * @param newEndDateTime novo horário de término
+     * @return {@code true} se houve mudança na sala ou horários, {@code false} caso contrário
+     */
+    public boolean hasRoomOrTimeChanged(UUID newRoomId, LocalDateTime newStartDateTime, LocalDateTime newEndDateTime) {
+    	
+    	return !this.room.getId().equals(newRoomId) ||
+    		   !this.startDateTime.equals(newStartDateTime) ||
+    		   !this.endDateTime.equals(newEndDateTime);
+    	
+    }
+    
+    /**
+     * Verifica se o evento permite atualizações.
+     * 
+     * @return {@code true} se o evento pode ser atualizado, {@code false} caso contrário
+     */
+    public boolean isUpdatable() {
+    	return status.isUpdatable();
+    }
+    
+    /**
+     * Aprova o evento.
+     * 
+     * @param approver usuário que está aprovando o evento
+     * @param approvalTime momento da aprovação
+     * @throws IllegalStateException se o evento não estiver pendente de aprovação
+     */
+    public void approve(User approver, LocalDateTime approvalTime) {
+    	
+        if (this.status != EventStatus.PENDING_APPROVAL) {
+        	
+            throw new IllegalStateException(
+                "Apenas eventos com status PENDING_APPROVAL podem ser aprovados"
+            );
+            
+        }
+        this.status = EventStatus.APPROVED;
+        this.approvedBy = approver;
+        this.approvalDateTime = approvalTime;
+    }
+
+    /**
+     * Rejeita o evento.
+     * 
+     * @param reason motivo da rejeição
+     * @throws IllegalArgumentException se o motivo estiver vazio
+     */
+    public void reject(String reason) {
+    	
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Motivo da rejeição é obrigatório");
+        }
+        
+        this.status = EventStatus.REJECTED;
+        this.rejectionReason = reason;
+        this.approvedBy = null;
+        this.approvalDateTime = null;
+    }
+
+    /**
+     * Cancela o evento pelo organizador.
+     */
+    public void cancelByOrganizer() {
+    	
+        if (!this.isUpdatable()) {
+            throw new IllegalStateException("Este evento não pode ser cancelado");
+        }
+        
+        this.status = EventStatus.CANCELED_BY_ORGANIZER;
+    }
+
+    /**
+     * Cancela o evento pelo administrador.
+     * 
+     * @param admin usuário administrador que está cancelando
+     */
+    public void cancelByAdmin(User admin) {
+        this.status = EventStatus.CANCELED_BY_ADMIN;
+    }
+
+    /**
+     * Altera o status do evento diretamente.
+     * Use este método apenas para transições simples sem lógica adicional.
+     * 
+     * @param newStatus novo status
+     */
+    public void changeStatus(EventStatus newStatus) {
+        this.status = newStatus;
+    }
+    
 }

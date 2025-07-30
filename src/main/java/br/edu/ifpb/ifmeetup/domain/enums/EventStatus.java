@@ -29,4 +29,23 @@ public enum EventStatus {
                 .findFirst()
                 .orElse(null);
     }
+    
+    /**
+     * Verifica se um evento com este status pode ser atualizado.
+     * 
+     * <p>Eventos nos seguintes status não podem ser atualizados:
+     * <ul>
+     *   <li>{@link #CONCLUDED} - Eventos já concluídos</li>
+     *   <li>{@link #CANCELED_BY_ADMIN} - Eventos cancelados pelo administrador</li>
+     *   <li>{@link #CANCELED_BY_ORGANIZER} - Eventos cancelados pelo organizador</li>
+     * </ul>
+     * 
+     * @return {@code true} se o evento pode ser atualizado, {@code false} caso contrário
+     * 
+     */
+    public boolean isUpdatable() {
+    	return this != CONCLUDED &&
+    		   this != CANCELED_BY_ADMIN &&
+    		   this != CANCELED_BY_ORGANIZER;
+    }
 }

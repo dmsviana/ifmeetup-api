@@ -8,14 +8,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate; // Para registrationDateTime
+import org.springframework.data.annotation.CreatedDate; 
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "event_participants",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "user_id"})) // Garante que um usuário só se inscreva uma vez no mesmo evento
+        uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "user_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -47,8 +47,7 @@ public class EventParticipant extends BaseEntity {
     @Column(name = "certificate_issued", nullable = false)
     private boolean certificateIssued = false;
 
-    @Lob
-    @Column(name = "feedback")
+    @Column(name = "feedback", columnDefinition = "TEXT")
     private String feedback; 
 
     

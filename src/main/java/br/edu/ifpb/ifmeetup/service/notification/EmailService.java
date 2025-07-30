@@ -72,7 +72,6 @@ public class EmailService {
     @Async
     public void sendPasswordResetEmail(String to, String name, String token) {
         try {
-            // Codificar o token para garantir URL válida
             String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
             
             Map<String, Object> variables = Map.of(
@@ -96,7 +95,6 @@ public class EmailService {
     @Async
     public void sendEmailVerification(String to, String name, String token) {
         try {
-            // Codificar o token para garantir URL válida
             String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8).trim();
             
             Map<String, Object> variables = Map.of(
