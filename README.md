@@ -408,7 +408,7 @@ Content-Type: application/json
 
 **Tipos de usuário SUAP:**
 - **Servidores**: Matrícula de 7-12 dígitos (ex: `1323726`)
-- **Alunos**: Matrícula completa (ex: `202215020007`)
+- **Alunos**: Matrícula completa (ex: `202515031234`)
 
 **Mapeamento automático de perfis:**
 - **STUDENT**: Todos os alunos
