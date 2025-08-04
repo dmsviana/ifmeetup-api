@@ -88,6 +88,8 @@ src/main/java/br/edu/ifpb/ifmeetup/
 ### 👤 Gestão de Usuários
 
 - ✅ **Cadastro e autenticação** de usuários
+- ✅ **Integração SUAP** - Login com credenciais institucionais do IFPB
+- ✅ **Mapeamento automático de perfis** baseado na função no SUAP
 - ✅ **Verificação de email** obrigatória
 - ✅ **Recuperação de senha** via email
 - ✅ **Perfis diferenciados**: Admin, Coordenador, Professor, Estudante
@@ -316,6 +318,16 @@ docker-compose up
 Acesse a documentação interativa da API em:
 **http://localhost:8080/swagger-ui.html**
 
+### 🏫 Documentação da Integração SUAP
+
+A integração SUAP permite que usuários do IFPB façam login usando suas credenciais institucionais:
+
+- **[Documentação Completa da API](documentation/suap-integration/api-documentation.md)** - Guia completo da integração
+- **[Exemplos de API](documentation/suap-integration/api-examples.md)** - Exemplos detalhados de request/response
+- **[Códigos de Erro](documentation/suap-integration/error-codes.md)** - Lista completa de códigos de erro
+- **[Guia de Troubleshooting](documentation/suap-integration/troubleshooting-guide.md)** - Soluções para problemas comuns
+- **[Especificação OpenAPI](documentation/suap-integration/openapi-spec.yaml)** - Especificação técnica completa
+
 ### 🔗 Endpoints Principais
 
 #### 🔐 Autenticação (`/auth`)
@@ -324,6 +336,7 @@ Acesse a documentação interativa da API em:
 |--------|----------|-----------|--------|
 | `POST` | `/auth/register` | Registrar novo usuário | ✅ |
 | `POST` | `/auth/login` | Fazer login | ✅ |
+| `POST` | `/auth/suap/login` | **Login SUAP** (matrícula/senha IFPB) | ✅ |
 | `POST` | `/auth/logout` | Fazer logout | ✅ |
 | `GET` | `/auth/verify` | Verificar conta via email | ✅ |
 | `POST` | `/auth/forgot-password` | Solicitar recuperação de senha | ✅ |
@@ -390,6 +403,27 @@ Content-Type: application/json
   "password": "senhaSegura123"
 }
 ```
+
+#### 🏫 Login SUAP (Credenciais Institucionais)
+
+```http
+POST /auth/suap/login
+Content-Type: application/json
+
+{
+  "username": "1323726",
+  "password": "minhasenhasuap123"
+}
+```
+
+**Tipos de usuário SUAP:**
+- **Servidores**: Matrícula de 7-12 dígitos (ex: `1323726`)
+- **Alunos**: Matrícula completa (ex: `202215020007`)
+
+**Mapeamento automático de perfis:**
+- **STUDENT**: Todos os alunos
+- **COORDINATOR**: Professores com função de coordenação ou cargos administrativos
+- **TEACHER**: Professores sem função de coordenação e outros servidores
 
 #### ✅ Verificação de Conta
 

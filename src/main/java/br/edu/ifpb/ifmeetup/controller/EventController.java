@@ -243,10 +243,6 @@ public class EventController implements EventApiContract {
     
     // métodos para que as spEL funcionem (n sei se é boa prática deixar aqui no controller)
 
-    /**
-     * Verifica se o usuário atual é o mesmo do ID fornecido ou é um administrador.
-     * Usado para controle de acesso em SpEL - deve ser público para funcionar.
-     */
     public boolean isCurrentUserOrAdmin(UUID userId, User currentUser) {
         try {
             // verifica se é o próprio usuário
@@ -264,10 +260,7 @@ public class EventController implements EventApiContract {
         }
     }
 
-    /**
-     * Verifica se o usuário atual é o organizador do evento.
-     * Usado para controle de acesso em SpEL - deve ser público para funcionar.
-     */
+
     public boolean isEventOrganizer(UUID eventId, User currentUser) {
         try {
             EventResponse event = eventService.findEventById(eventId);

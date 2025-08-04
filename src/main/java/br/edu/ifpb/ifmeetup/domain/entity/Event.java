@@ -64,12 +64,10 @@ public class Event extends BaseEntity {
     private Room room;
 
     @NotNull(message = "A data e hora de início são obrigatórias")
-    @Future(message = "A data de início do evento deve ser no futuro")
     @Column(name = "start_date_time", nullable = false)
     private LocalDateTime startDateTime;
 
     @NotNull(message = "A data e hora de término são obrigatórias")
-    @Future(message = "A data de término do evento deve ser no futuro")
     @Column(name = "end_date_time", nullable = false)
     private LocalDateTime endDateTime;
 

@@ -9,7 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import br.edu.ifpb.ifmeetup.config.SchedulingConfig;
 import br.edu.ifpb.ifmeetup.domain.entity.Event;
 import br.edu.ifpb.ifmeetup.domain.entity.Room;
 import br.edu.ifpb.ifmeetup.domain.entity.User;
@@ -33,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class EventService {
+
+    private final SchedulingConfig schedulingConfig;
 
 
 	private final EventRepository eventRepository;
@@ -290,21 +292,31 @@ public class EventService {
 	public EventResponse approveEvent(UUID eventId, User currentUser) {
 		log.info("Aprovando evento ID: {} por usuário: {}", eventId, currentUser.getEmail());
 		
-		// validação de permissão é feita no controller via @PreAuthorize
 		Event event = findEventEntityById(eventId);
 		
-		event.approve(currentUser, LocalDateTime.now());
-		Event updatedEvent = eventRepository.save(event);
+		if (event.getStartDateTime().isBefore(LocalDateTime.now())) {
+			throw new BusinessValidationException("Não é possível aprovar eventos com datas anteriores a atual");
+		}
+
+		try {
+			event.approve(currentUser, LocalDateTime.now());
+			Event updatedEvent = eventRepository.save(event);
+			
+			int currentParticipants = (int) participantRepository.countByEvent(updatedEvent);
+			
+			return EventResponse.fromProjection(findEventProjectionById(eventId), currentParticipants);
+			
+		} catch (IllegalStateException ex) {
+			throw new BusinessValidationException(ex.getMessage());
+		}
 		
-		int currentParticipants = (int) participantRepository.countByEvent(updatedEvent);
-		return EventResponse.fromProjection(findEventProjectionById(eventId), currentParticipants);
+		
 	}
 	
 	@Transactional
 	public EventResponse rejectEvent(UUID eventId, String rejectionReason, User currentUser) {
 		log.info("Rejeitando evento ID: {} por usuário: {} - motivo: {}", eventId, currentUser.getEmail(), rejectionReason);
 		
-		// validação de permissão é feita no controller via @PreAuthorize
 		Event event = findEventEntityById(eventId);
 		
 		event.reject(rejectionReason);

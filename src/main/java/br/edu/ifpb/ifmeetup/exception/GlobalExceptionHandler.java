@@ -2,6 +2,7 @@ package br.edu.ifpb.ifmeetup.exception;
 
 import br.edu.ifpb.ifmeetup.dto.error.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -414,7 +415,34 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
     }
+    
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+            @NonNull ConstraintViolationException ex,
+            @NonNull HttpServletRequest request) {
 
+        String path = request.getRequestURI();
+        
+        List<String> violations = ex.getConstraintViolations()
+                .stream()
+                .map(violation -> violation.getMessage())
+                .collect(Collectors.toList());
+        
+        log.debug("Constraint violations in request to {}: {}", path, violations);
+
+        String mainMessage = violations.isEmpty() 
+            ? "Dados inválidos fornecidos" 
+            : violations.get(0);
+
+        ErrorResponse errorResponse = ErrorResponse.validation(
+                mainMessage,
+                path,
+                violations
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+    
     /**
      * Trata todas as exceções não mapeadas especificamente.
      */

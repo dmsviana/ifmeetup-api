@@ -50,4 +50,15 @@ public record UserResponse(
             permissions
         );
     }
+    
+    public static UserResponse fromEntityBasicInfo(User user) {
+        return new UserResponse(
+            user.getId(),
+            user.getFirstName() + " " + user.getLastName(),
+            user.getEmail(),
+            null,  // phoneNumber
+            null,  // roles
+            null   // permissions
+        );
+    }
 } 
