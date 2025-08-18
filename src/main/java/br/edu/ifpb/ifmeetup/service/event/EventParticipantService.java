@@ -26,50 +26,57 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class EventParticipantService {
-	
-	private final EventParticipantRepository participantRepository;
-	private final EventRepository eventRepository;
-	private final UserRepository userRepository;
-	
-	
-	@Transactional
-	public EventParticipantResponse registerParticipant(UUID eventId, User currentUser) {
-		log.info("Registrando usuário {} no evento {}", currentUser.getId(), eventId);
-		
-		Event event = findEventById(eventId);
-		validateEventRegistration(event, currentUser);
-		
-		EventParticipant participant = new EventParticipant();
-		
-		participant.setEvent(event);
-		participant.setUser(currentUser);
-		participant.setAttendanceStatus(AttendanceStatus.REGISTERED);
-		
-		EventParticipant saved = participantRepository.save(participant);
-		
-		return EventParticipantResponse.fromEntity(saved);
-	
-	}
-	
-	public void cancelRegistration(UUID eventId, User currentUser) {
-		log.info("Cancelando inscrição do usuário {} para o evento {}", currentUser.getId(), eventId);
-		
-		Event event = findEventById(eventId);
-		
-		EventParticipant participant = findParticipantByEventAndUser(eventId, currentUser.getId());
-				
-		validateCancellation(event, participant);
-		
-		participant.setAttendanceStatus(AttendanceStatus.CANCELED);
-		participantRepository.save(participant);
-		
-		log.info("Inscrição cancelada para o usuário {} no evento {}", currentUser.getId(), eventId);
-		
-	}
-	
-	
+
+    private final EventParticipantRepository participantRepository;
+    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+
+
+    @Transactional
+    public EventParticipantResponse registerParticipant(UUID eventId, User currentUser) {
+        log.info("Registrando usuário {} no evento {}", currentUser.getId(), eventId);
+
+        Event event = findEventById(eventId);
+        validateEventRegistration(event, currentUser);
+
+        // corrige o problema de inscrever-se -> cancelar inscrição -> inscrever-se novamente
+        // buscar ou criar participação
+        EventParticipant participant = participantRepository
+                .findByEventIdAndUserId(eventId, currentUser.getId())
+                .orElse(new EventParticipant());
+
+        // configurar/resetar dados (funciona tanto para novo quanto para reativação)
+        participant.setEvent(event);
+        participant.setUser(currentUser);
+        participant.setAttendanceStatus(AttendanceStatus.REGISTERED);
+        participant.setRegistrationDateTime(LocalDateTime.now());
+        participant.setCertificateIssued(false);
+        participant.setFeedback(null);
+
+        EventParticipant saved = participantRepository.save(participant);
+        return EventParticipantResponse.fromEntity(saved);
+    }
+
+    @Transactional
+    public void cancelRegistration(UUID eventId, User currentUser) {
+        log.info("Cancelando inscrição do usuário {} para o evento {}", currentUser.getId(), eventId);
+
+        Event event = findEventById(eventId);
+
+        EventParticipant participant = findParticipantByEventAndUser(eventId, currentUser.getId());
+
+        validateCancellation(event, participant);
+
+        participant.setAttendanceStatus(AttendanceStatus.CANCELED);
+        participantRepository.save(participant);
+
+        log.info("Inscrição cancelada para o usuário {} no evento {}", currentUser.getId(), eventId);
+
+    }
+
+
     public EventParticipantResponse updatedAttendanceStatus(UUID eventId, UUID userId, AttendanceStatus status,
-            User updatedBy) {
+                                                            User updatedBy) {
         log.info("Atualizando status de presença para o usuário {} no evento {} para {}", userId, eventId, status);
 
         Event event = findEventById(eventId);
@@ -93,7 +100,7 @@ public class EventParticipantService {
         return EventParticipantResponse.fromEntity(updatedParticipant);
 
     }
-    
+
     private boolean isAdmin(User user) {
 
         return user.getAuthorities()
@@ -122,8 +129,7 @@ public class EventParticipantService {
         log.info("Feedback salvo com sucesso");
         return EventParticipantResponse.fromEntity(updatedParticipant);
     }
-    
-    @Transactional(readOnly = true)
+
     public List<EventParticipantResponse> findParticipantsByEvent(UUID eventId) {
 
         log.info("Buscando participantes do evento {}", eventId);
@@ -136,8 +142,7 @@ public class EventParticipantService {
                 .collect(Collectors.toList());
 
     }
-    
-    @Transactional(readOnly = true)
+
     public List<EventParticipantResponse> findParticipantsByEventAndStatus(UUID eventId, AttendanceStatus status) {
         log.info("Buscando participantes do evento {} com status {}", eventId, status);
 
@@ -147,31 +152,30 @@ public class EventParticipantService {
                 .map(EventParticipantResponse::fromProjection)
                 .collect(Collectors.toList());
     }
-    
+
     public List<EventParticipantResponse> findEventsByParticipant(UUID userId) {
         log.info("Buscando eventos do participante {}", userId);
-        
+
         User user = findUserById(userId);
-        
+
         return participantRepository.findProjectedByUserWithEventDetails(user).stream()
                 .map(EventParticipantResponse::fromProjection)
                 .collect(Collectors.toList());
     }
-    
+
     public List<EventParticipantResponse> findMyEvents(User currentUser) {
         return findEventsByParticipant(currentUser.getId());
     }
 
-    @Transactional(readOnly = true)
     public boolean isUserRegistered(UUID eventId, UUID userId) {
 
-        Event event = findEventById(eventId);
-        User user = findUserById(userId);
-        return participantRepository.existsByEventAndUser(event, user);
+        // verifica se existe participação ativa (não cancelada)
+        return participantRepository.findByEventIdAndUserId(eventId, userId)
+                .map(participant -> participant.getAttendanceStatus() != AttendanceStatus.CANCELED)
+                .orElse(false);
 
     }
 
-    @Transactional(readOnly = true)
     public long countConfirmedParticipants(UUID eventId) {
 
         Event event = findEventById(eventId);
@@ -205,40 +209,40 @@ public class EventParticipantService {
 
         // verifica se o status do evento permite registro
         if (event.getStatus() != EventStatus.APPROVED) {
-        	
+
             String message = switch (event.getStatus()) {
-            
+
                 case PENDING_APPROVAL -> "Não é possível se inscrever em evento pendente de aprovação";
-                
+
                 case REJECTED -> "Não é possível se inscrever em evento rejeitado";
-                
+
                 case CANCELED_BY_ORGANIZER -> "Não é possível se inscrever em evento cancelado pelo organizador";
-                
+
                 case CANCELED_BY_ADMIN -> "Não é possível se inscrever em evento cancelado pelo administrador";
-                
+
                 case CONCLUDED -> "Não é possível se inscrever em evento já concluído";
-                
+
                 case IN_PROGRESS -> "Não é possível se inscrever em evento já em andamento";
-                
+
                 default -> "Não é possível se inscrever neste evento devido ao seu status atual";
-                
+
             };
-            
+
             throw new BusinessValidationException(message);
         }
 
-        if (participantRepository.existsByEventAndUser(event, currentUser)) {
+        if (isUserRegistered(event.getId(), currentUser.getId())) {
             throw new BusinessValidationException("Usuário já está inscrito neste evento");
         }
 
         if (event.getMaxParticipants() != null && event.getMaxParticipants() > 0) {
-        	
+
             long currentCount = participantRepository.countByEvent(event);
-            
+
             if (currentCount >= event.getMaxParticipants()) {
                 throw new BusinessValidationException("Evento lotado");
             }
-            
+
         }
 
         if (event.getStartDateTime().isBefore(LocalDateTime.now())) {

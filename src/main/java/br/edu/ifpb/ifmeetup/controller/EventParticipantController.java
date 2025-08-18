@@ -138,7 +138,7 @@ public class EventParticipantController implements EventParticipantApiContract {
 
     @Override
     @GetMapping("/{eventId}/participants/count")
-    @PreAuthorize("hasAuthority('EVENT_VIEW_PARTICIPANTS')")
+    //@PreAuthorize("hasAuthority('EVENT_VIEW_PARTICIPANTS')")
     public ResponseEntity<Long> getConfirmedParticipantsCount(@PathVariable UUID eventId) {
         log.debug("Contando participantes confirmados do evento {}", eventId);
         
