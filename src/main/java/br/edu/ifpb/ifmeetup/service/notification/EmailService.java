@@ -95,20 +95,17 @@ public class EmailService {
     @Async
     public void sendEmailVerification(String to, String name, String token) {
         try {
-            String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8).trim();
-            
+
             Map<String, Object> variables = Map.of(
-                "name", name,
-                // Ajustar para o endpoint correto no frontend que irá redirecionar para a API
-                "verificationLink", applicationConfig.getApplicationUrl() + "/auth/verify?token=" + encodedToken,
-                "token", token
+                    "name", name,
+                    "token", token
             );
 
             sendTemplateEmail(
-                to,
-                "Verificação de Email - IFMeetup",
-                "email-verification",
-                variables
+                    to,
+                    "Verificação de Email - IFMeetup",
+                    "email-verification",
+                    variables
             );
         } catch (Exception e) {
             log.error("Erro ao enviar email de verificação para: {}", to, e);

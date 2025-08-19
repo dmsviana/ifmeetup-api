@@ -34,21 +34,16 @@ public class UserRegistrationEventListener {
         log.info("Processing user registration event for user: {}", event.getUser().getEmail());
         
         try {
-            // Enviar email de verificação
             sendVerificationEmail(event);
             
-            // Enviar email de boas-vindas
             sendWelcomeEmail(event);
             
             log.info("Successfully sent registration emails for user: {}", event.getUser().getEmail());
             
         } catch (Exception ex) {
-            // Registrar a falha, mas não deixar que ela afete o processo de registro
-            log.error("Failed to send registration emails for user: {} - Error: {}", 
+            log.error("Failed to send registration emails for user: {} - Error: {}",
                     event.getUser().getEmail(), ex.getMessage(), ex);
-            
-            // Opcionalmente, pode-se implementar uma estratégia de retry aqui
-            // ou armazenar o evento em uma fila para reprocessamento posterior
+
         }
     }
     

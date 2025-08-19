@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Verificação de Email - IFMeetup</title>
+    <title>Código de Verificação - IFMeetup</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,36 +25,31 @@
             border-radius: 5px;
             margin-top: 20px;
         }
-        .button {
-            display: inline-block;
-            padding: 12px 24px;
+        .token {
             background-color: #007b33;
-            color: #FFFFFF !important;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
             font-weight: bold;
             text-align: center;
-            font-size: 16px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            border: 2px solid #005a24;
-        }
-        .button:hover {
-            background-color: #005a24;
-        }
-        .token {
-            background-color: #e9ecef;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            margin: 20px 0;
-            word-break: break-all;
+            margin: 30px 0;
+            letter-spacing: 3px;
+            border: 3px solid #005a24;
         }
         .info {
             color: #0c5460;
             background-color: #d1ecf1;
             border: 1px solid #bee5eb;
-            padding: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .steps {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
             border-radius: 5px;
             margin-top: 20px;
         }
@@ -68,40 +63,41 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Verificação de Email</h1>
+<div class="header">
+    <h1>🔐 Código de Verificação</h1>
+</div>
+
+<div class="content">
+    <p>Olá <span th:text="${name}">Usuário</span>,</p>
+
+    <p>Para completar seu cadastro no IFMeetup, use o código de verificação abaixo:</p>
+
+    <div class="token">
+        <span th:text="${token}">ABC123</span>
     </div>
-    
-    <div class="content">
-        <p>Olá <span th:text="${name}">Usuário</span>,</p>
-        
-        <p>Para completar seu cadastro no IFMeetup, precisamos verificar seu endereço de email.</p>
-        
-        <p>Por favor, clique no botão abaixo para verificar seu email:</p>
-        
-        <div style="text-align: center;">
-            <a th:href="${verificationLink}" class="button">Verificar Email</a>
-        </div>
-        
-        <p>Ou use o seguinte código de verificação:</p>
-        
-        <div class="token">
-            <span th:text="${token}">TOKEN</span>
-        </div>
-        
-        <div class="info">
-            <p><strong>Observação:</strong></p>
-            <ul>
-                <li>Este link é válido por 24 horas</li>
-                <li>Após a verificação, você terá acesso completo à plataforma</li>
-                <li>Se você não se cadastrou no IFMeetup, por favor ignore este email</li>
-            </ul>
-        </div>
+
+    <div class="steps">
+        <p><strong>📋 Como usar:</strong></p>
+        <ol>
+            <li>Volte para a página de cadastro</li>
+            <li>Digite o código acima no campo "Código de Verificação"</li>
+            <li>Clique em "Verificar Código"</li>
+        </ol>
     </div>
-    
-    <div class="footer">
-        <p>Este é um email automático, por favor não responda.</p>
-        <p>&copy; 2025 IFMeetup. Todos os direitos reservados.</p>
+
+    <div class="info">
+        <p><strong>⚠️ Importante:</strong></p>
+        <ul>
+            <li>Este código é válido por <strong>24 horas</strong></li>
+            <li>Não compartilhe este código com ninguém</li>
+            <li>Se você não se cadastrou no IFMeetup, ignore este email</li>
+        </ul>
     </div>
+</div>
+
+<div class="footer">
+    <p>Este é um email automático, por favor não responda.</p>
+    <p>&copy; 2025 IFMeetup. Todos os direitos reservados.</p>
+</div>
 </body>
-</html> 
+</html>

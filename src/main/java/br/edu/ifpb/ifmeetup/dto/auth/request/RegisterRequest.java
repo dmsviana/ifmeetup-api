@@ -29,6 +29,7 @@ public record RegisterRequest(
     
     @Schema(description = "Número de telefone do usuário", example = "(83) 99999-9999")
     @Pattern(regexp = "^\\(?\\d{2}\\)?[\\s-]?\\d{4,5}-?\\d{4}$", message = "Formato de telefone inválido")
+    @NotBlank(message = "Telefone é obrigatório")
     String phoneNumber,
     
     @Schema(description = "Senha do usuário (mínimo 8 caracteres)", example = "senhaSecreta123")
